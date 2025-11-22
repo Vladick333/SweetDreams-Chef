@@ -21,11 +21,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-import streamlit as st # Убедись, что это есть
-# ...
-# Замени: MY_API_KEY = "..."
-# На:
-MY_API_KEY = st.secrets["GEMINI_API_KEY"]
+# !!! БЕЗОПАСНОЕ ЧТЕНИЕ КЛЮЧА API !!!
+# Этот блок устраняет ошибку KeyError
+try:
+    # Пытаемся получить ключ из переменной "GEMINI_API_KEY" из Streamlit Secrets
+    MY_API_KEY = st.secrets["GEMINI_API_KEY"] 
+except KeyError:
+    # Если ключ не найден (KeyError), присваиваем заглушку и показываем ошибку
+    MY_API_KEY = "PLACEHOLDER_KEY_REQUIRED_FOR_CLOUD_DEPLOYMENT" 
+    st.error("⚠️ Ошибка: Ключ GEMINI_API_KEY не найден в Secrets. Введите его в настройках Streamlit Cloud.")
 
 
 # ==============================================================================
@@ -33,6 +37,10 @@ MY_API_KEY = st.secrets["GEMINI_API_KEY"]
 # ==============================================================================
 @st.cache_resource
 def init_neural_core():
+    # Проверяем, не является ли ключ заглушкой перед попыткой настройки API
+    if MY_API_KEY == "PLACEHOLDER_KEY_REQUIRED_FOR_CLOUD_DEPLOYMENT":
+        return False, "API Key Not Found", None
+
     try:
         genai.configure(api_key=MY_API_KEY)
         models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
@@ -42,9 +50,8 @@ def init_neural_core():
         return True, target, genai.GenerativeModel(target)
     except Exception as e:
         return False, str(e), None
-
-
-STATUS, MODEL_NAME, MODEL = init_neural_core()
+# 
+# (Продолжение кода... STATUS, MODEL_NAME, MODEL = init_neural_core())
 
 
 # ==============================================================================
@@ -619,4 +626,5 @@ with t3:
     st.header("📂 БАЗА ДАННЫХ")
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
+
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
