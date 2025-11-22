@@ -22,7 +22,6 @@ st.set_page_config(
 )
 
 # !!! БЕЗОПАСНОЕ ЧТЕНИЕ КЛЮЧА API !!!
-# Этот блок устраняет ошибку KeyError
 try:
     # Пытаемся получить ключ из переменной "GEMINI_API_KEY" из Streamlit Secrets
     MY_API_KEY = st.secrets["GEMINI_API_KEY"] 
@@ -50,8 +49,9 @@ def init_neural_core():
         return True, target, genai.GenerativeModel(target)
     except Exception as e:
         return False, str(e), None
-# 
-# (Продолжение кода... STATUS, MODEL_NAME, MODEL = init_neural_core())
+
+# !!! ФИНАЛИЗАЦИЯ ИНИЦИАЛИЗАЦИИ ЯДРА !!!
+STATUS, MODEL_NAME, MODEL = init_neural_core()
 
 
 # ==============================================================================
@@ -628,3 +628,4 @@ with t3:
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
 
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
