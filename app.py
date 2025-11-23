@@ -37,16 +37,19 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 2. ЯДРО (API)
+# 2. ЯДРО (API) - ИСПРАВЛЕНО ПОД РОТАЦИЮ
 # ==============================================================================
 @st.cache_resource
 def init_neural_core():
-    # Проверяем, не является ли ключ заглушкой перед попыткой настройки API
-    if MY_API_KEY == "PLACEHOLDER_KEY_REQUIRED_FOR_CLOUD_DEPLOYMENT":
-        return False, "API Key Not Found", None
+    # Проверяем, есть ли ключи вообще
+    if not API_KEYS_POOL:
+        return False, "Нет ключей в API_KEYS_POOL", None
 
     try:
-        genai.configure(api_key=MY_API_KEY)
+        # БЕРЕМ СЛУЧАЙНЫЙ КЛЮЧ ИЗ СПИСКА (Вместо старого MY_API_KEY)
+        start_key = random.choice(API_KEYS_POOL)
+        genai.configure(api_key=start_key)
+        
         models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
         target = "models/gemini-pro"
         for m in models:
@@ -57,7 +60,6 @@ def init_neural_core():
 
 # !!! ФИНАЛИЗАЦИЯ ИНИЦИАЛИЗАЦИИ ЯДРА !!!
 STATUS, MODEL_NAME, MODEL = init_neural_core()
-
 
 # ==============================================================================
 # 3. ДИЗАЙН (MAXIMUM CONTRAST)
@@ -728,6 +730,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
