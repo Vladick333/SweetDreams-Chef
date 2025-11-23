@@ -38,7 +38,7 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ (ПОЛНОЦЕННАЯ)
+# 1.2. АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ (ИСПРАВЛЕНО ПОД НОВУЮ ВЕРСИЮ)
 # ==============================================================================
 try:
     # Загружаем базу пользователей
@@ -86,8 +86,9 @@ else:
     # Вкладка 2: Регистрация
     with tab2:
         try:
-            # Виджет регистрации (email, username, name, password)
-            email, username, name = authenticator.register_user(preauthorization=False)
+            # !!! ВОТ ЗДЕСЬ БЫЛА ОШИБКА - ИСПРАВЛЕНО !!!
+            # Убрали preauthorization=False, добавили location='main'
+            email, username, name = authenticator.register_user(location='main')
             
             if email:
                 st.success('✅ Регистрация успешна! Теперь перейдите на вкладку "Вход".')
@@ -845,6 +846,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
