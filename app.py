@@ -8,16 +8,16 @@ import pandas as pd
 import google.generativeai as genai
 from datetime import datetime
 import uuid
-import random # <--- ВАЖНО: Проверь, что этот импорт есть!
+import random
 import streamlit.components.v1 as components
-# === БИБЛИОТЕКИ ДЛЯ ВХОДА ===
+# === БИБЛИОТЕКИ ДЛЯ ВХОДА И РЕГИСТРАЦИИ ===
 import yaml
 from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
-# ============================
+# ==========================================
 
 # ==============================================================================
-# 1. НАСТРОЙКИ
+# 1. НАСТРОЙКИ СТРАНИЦЫ
 # ==============================================================================
 st.set_page_config(
     page_title="Vladыка AI [v24.0]",
@@ -26,33 +26,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# !!! БЕЗОПАСНОЕ ЧТЕНИЕ И СОЗДАНИЕ СПИСКА КЛЮЧЕЙ !!!
+# !!! 1.1. ЗАГРУЗКА КЛЮЧЕЙ (ДЛЯ БОТА) !!!
 try:
-    # Получаем данные из секретов
     raw_keys = st.secrets["GEMINI_API_KEY"]
-    
-    # Превращаем всё в список API_KEYS_POOL, чтобы ai_engine мог брать оттуда случайный
     if isinstance(raw_keys, str):
-        API_KEYS_POOL = [raw_keys] # Если там строка -> делаем список из 1 элемента
+        API_KEYS_POOL = [raw_keys]
     else:
-        API_KEYS_POOL = raw_keys   # Если там уже список -> оставляем как есть
-
+        API_KEYS_POOL = raw_keys
 except KeyError:
     st.error("⚠️ Ошибка: Ключ GEMINI_API_KEY не найден в Secrets.")
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.1. АВТОРИЗАЦИЯ (ВСТАВИТЬ ПОСЛЕ КЛЮЧЕЙ, ПЕРЕД ЯДРОМ)
+# 1.2. АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ (ПОЛНОЦЕННАЯ)
 # ==============================================================================
 try:
     # Загружаем базу пользователей
     with open('config.yaml') as file:
         config = yaml.load(file, Loader=SafeLoader)
 except FileNotFoundError:
-    st.error("⚠️ Файл config.yaml не найден! Убедитесь, что загрузили его на GitHub.")
+    st.error("⚠️ Файл config.yaml не найден! Загрузите его на GitHub.")
     st.stop()
 
-# Настраиваем проверку паролей
+# Настраиваем аутентификатор
 authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
@@ -60,21 +56,50 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days']
 )
 
-# Рисуем окно входа (ИСПРАВЛЕНО: убрано лишнее слово 'Вход')
-authenticator.login(location='main')
+# --- ЕСЛИ ПОЛЬЗОВАТЕЛЬ УЖЕ ВОШЕЛ ---
+if st.session_state.get("authentication_status"):
+    # Сохраняем данные
+    st.session_state.user_email = st.session_state["username"]
+    
+    # Кнопка выхода в меню
+    with st.sidebar:
+        st.write(f"👋 Привет, *{st.session_state['name']}*!")
+        authenticator.logout('Выйти', 'sidebar')
 
-# ПРОВЕРКА: ПУСКАТЬ ИЛИ НЕТ?
-if st.session_state["authentication_status"] is False:
-    st.error('❌ Неверное имя пользователя или пароль')
-    st.stop() # <--- СТОП: Дальше код не пойдет
-elif st.session_state["authentication_status"] is None:
-    st.warning('🔒 Пожалуйста, войдите в систему')
-    st.stop() # <--- СТОП: Ждем ввода пароля
+# --- ЕСЛИ НЕ ВОШЕЛ: ПОКАЗЫВАЕМ ВХОД / РЕГИСТРАЦИЮ ---
+else:
+    # Рисуем две вкладки
+    tab1, tab2 = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-# Если код дошел сюда — значит, пароль верный!
-# Сохраняем имя, чтобы бот знал, как обращаться
-if st.session_state.get("name"):
-    current_user_name = st.session_state["name"]
+    # Вкладка 1: Вход
+    with tab1:
+        try:
+            authenticator.login(location='main')
+        except Exception as e:
+            st.error(e)
+            
+        if st.session_state["authentication_status"] is False:
+            st.error('❌ Неверный логин или пароль')
+        elif st.session_state["authentication_status"] is None:
+            st.warning('Пожалуйста, войдите в систему')
+
+    # Вкладка 2: Регистрация
+    with tab2:
+        try:
+            # Виджет регистрации (email, username, name, password)
+            email, username, name = authenticator.register_user(preauthorization=False)
+            
+            if email:
+                st.success('✅ Регистрация успешна! Теперь перейдите на вкладку "Вход".')
+                # СОХРАНЯЕМ НОВОГО ПОЛЬЗОВАТЕЛЯ В ФАЙЛ
+                with open('config.yaml', 'w') as file:
+                    yaml.dump(config, file, default_flow_style=False)
+        except Exception as e:
+            st.error(f"Ошибка регистрации: {e}")
+
+    # ОСТАНОВКА (Чтобы чат не грузился без входа)
+    if not st.session_state.get("authentication_status"):
+        st.stop()
 # ==============================================================================
 # 2. ЯДРО (API) - ИСПРАВЛЕНО ПОД РОТАЦИЮ
 # ==============================================================================
@@ -820,6 +845,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
