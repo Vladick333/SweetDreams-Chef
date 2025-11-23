@@ -749,17 +749,17 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИНАЛЬНЫЙ СТАБИЛЬНЫЙ ВАРИАНТ) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (С ПОСТОЯННОЙ ПОДСКАЗКОЙ) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. CSS (Крепим кнопку на удобном месте)
+    # 1. CSS: Крепим кнопку справа сверху
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 120px !important; /* НОВАЯ УДОБНАЯ ПОЗИЦИЯ */
-        right: 15px !important;
+        top: 120px !important; /* УСТАНОВЛЕНА НОВАЯ ПОЗИЦИЯ */
+        right: 20px !important;
         z-index: 99999 !important;
         background-color: #4285F4 !important;
         color: white !important;
@@ -777,17 +777,26 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка (При нажатии устанавливает флаг и показывает подсказку)
+    # 2. Кнопка
     if st.button("V Войти", key="float_login_btn", type="primary"):
         
         # Устанавливаем флаг, чтобы раскрыть Expander в сайдбаре
         st.session_state['force_open_login'] = True
         
-        # Показываем подсказку (100% надежный метод)
-        st.toast("⬅ Нажмите на стрелочку меню слева для входа!", icon="⚠️")
+        # Запускаем JS для открытия меню (best effort)
+        components.html("""
+        <script>
+            const sidebarArrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (sidebarArrow) {
+                sidebarArrow.click();
+            }
+        </script>
+        """, height=0, width=0)
         
-        # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
         st.rerun()
+    
+    # 3. ПОСТОЯННАЯ ПОДСКАЗКА (ЗАМЕНА БЫСТРОГО ТОСТА)
+    st.info("⬅ Нажмите на стрелочку меню слева для входа!", icon="👉")
 # --- САЙДБАР ---
 with st.sidebar:
     st.title("⚙️ МЕНЮ")
@@ -927,6 +936,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
