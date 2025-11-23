@@ -91,30 +91,45 @@ def inject_css():
         }
 
 
-      /* --- ГЛАВНЫЕ КНОПКИ (БРОНЕБОЙНЫЙ ФИКС) --- */
-        .main .stButton button {
-            /* Используем 'background' вместо 'background-color' - это удаляет все скрытые градиенты айфона */
+      /* --- ГЛАВНЫЕ КНОПКИ (БРОНЕБОЙНЫЙ ФИКС 2.0) --- */
+        /* Используем более строгий селектор div[data-testid="stButton"] > button */
+        /* Это заставит любой телефон подчиниться */
+        
+        div[data-testid="stButton"] > button {
+            /* 1. ЖЕСТКИЙ ФОН (background вместо background-color стирает все градиенты) */
             background: #1a1a1a !important; 
-            background-color: #1a1a1a !important; 
             
-            border: 2px solid #333 !important; 
+            /* 2. ПРИНУДИТЕЛЬНЫЙ ЦВЕТ ТЕКСТА (WebKit specific) */
             color: #FFFFFF !important; 
+            -webkit-text-fill-color: #FFFFFF !important;
+            
+            /* 3. УБИРАЕМ МОБИЛЬНЫЕ СТИЛИ */
+            border: 2px solid #333 !important; 
             border-radius: 15px !important;
+            box-shadow: none !important; 
+            
+            /* 4. ОТКЛЮЧАЕМ ПРОЗРАЧНОСТЬ (Самое важное для Xiaomi) */
+            opacity: 1 !important;
+            isolation: isolate !important; /* Создает новый контекст наложения */
+            
+            /* 5. ФИКСЫ ОТОБРАЖЕНИЯ */
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            
+            /* Размеры и шрифты (Ваш дизайн) */
             padding: 15px 5px !important;
             font-weight: 900 !important;
             text-transform: uppercase !important;
             font-size: 16px !important;
-            box-shadow: none !important; 
             transition: all 0.1s ease-in-out !important;
-            transform: none !important; 
-            
-            /* ОТКЛЮЧАЕМ ВСЕ МОБИЛЬНЫЕ ЭФФЕКТЫ */
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-            background-image: none !important; /* Убиваем блики */
-            -webkit-text-fill-color: #FFFFFF !important; /* Красим текст */
-            opacity: 1 !important; /* Запрещаем прозрачность */
+            transform: none !important;
+            min-height: 55px !important;
+        }
+
+        /* Фикс конкретно для "Secondary" кнопок (серых), чтобы они не были прозрачными */
+        div[data-testid="stButton"] > button[kind="secondary"] {
+            background: #1a1a1a !important;
+            color: #FFFFFF !important;
         }
 
         /* Стиль первой кнопки (как на скриншоте) */
@@ -741,6 +756,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
