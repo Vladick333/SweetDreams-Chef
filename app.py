@@ -660,7 +660,7 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС (ФИНАЛ: ТИХАЯ КНОПКА, ТОЧНЫЙ КЛИК ПО МЕНЮ)
+# 5. ИНТЕРФЕЙС (ФИНАЛ: КНОПКА V РАСКРЫВАЕТ ВХОД)
 # ==============================================================================
 import json
 import os
@@ -706,6 +706,7 @@ if 'current_chat_id' not in st.session_state: st.session_state.current_chat_id =
 if 'mode' not in st.session_state: st.session_state.mode = "AI"
 if 'vec' not in st.session_state: st.session_state.vec = [5] * len(FEATURES)
 if 'trigger_query' not in st.session_state: st.session_state.trigger_query = None
+if 'show_login' not in st.session_state: st.session_state.show_login = False # Флаг для открытия меню
 
 
 # --- УПРАВЛЕНИЕ ЧАТАМИ ---
@@ -748,18 +749,17 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! КНОПКА ВХОДА (БЕЗ ЛИШНИХ СЛОВ И ОШИБОК) !!!
+# !!! КНОПКА ВХОДА (РАБОТАЕТ ЧЕРЕЗ PYTHON) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. CSS: Кнопка висит красиво
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 80px !important; /* Вернул чуть выше, чтобы было удобно */
-        right: 15px !important;
-        z-index: 999999 !important;
+        top: 100px !important;
+        right: 20px !important;
+        z-index: 99999 !important;
         background-color: #4285F4 !important;
         color: white !important;
         border: none !important;
@@ -776,24 +776,18 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка: При нажатии только открывает меню
+    # При нажатии мы просто меняем переменную, чтобы сайдбар знал, что надо открыться
     if st.button("V Войти", key="float_login_btn", type="primary"):
+        st.session_state.show_login = True # Сигнал для сайдбара
         
-        # Ставим флаг, чтобы раскрыть форму входа
-        st.session_state['force_open_login'] = True
-        
-        # 3. ТОЧНЫЙ JS (Нажимает ТОЛЬКО на стрелочку сайдбара)
+        # Попытка открыть меню JS-ом (для ПК)
         components.html("""
         <script>
-            // Ищем строго по ID стрелочки Streamlit
             const arrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-            if (arrow) {
-                arrow.click();
-            }
+            if (arrow) arrow.click();
         </script>
         """, height=0, width=0)
         
-        # Перезагружаем, чтобы обновить интерфейс (меню выедет)
         st.rerun()
 
 
@@ -852,6 +846,7 @@ with t1:
         st.session_state.history.append({"role": "user", "content": q})
         st.session_state.trigger_rerun = True
 
+    # ТВОЙ ИДЕАЛЬНЫЙ ДИЗАЙН КНОПОК (2x2)
     col_grid = st.columns([1, 1]) 
     
     with col_grid[0]:
@@ -935,7 +930,6 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
-
 
 
 
