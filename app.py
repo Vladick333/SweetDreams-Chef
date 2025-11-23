@@ -91,9 +91,12 @@ def inject_css():
         }
 
 
-       /* --- ГЛАВНЫЕ КНОПКИ (ОБЫЧНЫЕ, БЕЗ АНИМАЦИИ) --- */
+      /* --- ГЛАВНЫЕ КНОПКИ (БРОНЕБОЙНЫЙ ФИКС) --- */
         .main .stButton button {
+            /* Используем 'background' вместо 'background-color' - это удаляет все скрытые градиенты айфона */
+            background: #1a1a1a !important; 
             background-color: #1a1a1a !important; 
+            
             border: 2px solid #333 !important; 
             color: #FFFFFF !important; 
             border-radius: 15px !important;
@@ -101,17 +104,17 @@ def inject_css():
             font-weight: 900 !important;
             text-transform: uppercase !important;
             font-size: 16px !important;
-            box-shadow: none !important; /* УБРАН ТЕНЬ */
+            box-shadow: none !important; 
             transition: all 0.1s ease-in-out !important;
-            transform: none !important; /* УБРАНО SCALE */
+            transform: none !important; 
             
-            /* === ВСТАВЛЯЕМ СЮДА (ВНУТРЬ СКОБОК) === */
-            -webkit-appearance: none !important;         /* 1. Убирает системный стиль */
-            -moz-appearance: none !important;            /* 2. Для Firefox */
-            appearance: none !important;                 /* 3. Стандарт */
-            background-image: none !important;           /* 4. Убирает "стеклянный" блик на Айфоне */
-            -webkit-text-fill-color: #FFFFFF !important; /* 5. Красит текст в белый на Xiaomi */
-            /* ====================================== */
+            /* ОТКЛЮЧАЕМ ВСЕ МОБИЛЬНЫЕ ЭФФЕКТЫ */
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-image: none !important; /* Убиваем блики */
+            -webkit-text-fill-color: #FFFFFF !important; /* Красим текст */
+            opacity: 1 !important; /* Запрещаем прозрачность */
         }
 
         /* Стиль первой кнопки (как на скриншоте) */
@@ -738,6 +741,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
