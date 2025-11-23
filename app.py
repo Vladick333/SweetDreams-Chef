@@ -402,20 +402,19 @@ def inject_css():
             display: flex;
             justify-content: center;
         }
-/* --- СУРГИЧЕСКОЕ ИСПРАВЛЕНИЕ ОШИБКИ МОБИЛЬНОЙ ФОРМЫ (АГРЕССИВНОЕ) --- */
-/* Мы делаем элемент нулевого размера, чтобы он не выталкивал текст и не мешал */
-div[data-testid="stFormSubmitHelper"] {
+/* --- ФИКС ФОРМЫ (РЕШЕНИЕ 3.0: МАКСИМАЛЬНОЕ СКРЫТИЕ ПОДСКАЗОК) --- */
+/* Этот код нацелен на все возможные мелкие текстовые элементы внутри формы, 
+   которые могут содержать "Press Enter..." или другие системные хинты. */
+div[data-testid="stFormSubmitHelper"],
+div[data-testid="stForm"] p:nth-last-child(2),
+div[data-testid="stForm"] span:has(> div[data-testid="stText"]) {
     display: none !important;
     visibility: hidden !important;
-    /* Дополнительные команды для устранения лишних отступов */
-    width: 0 !important;
     height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    line-height: 0 !important;
-    overflow: hidden !important;
 }
-/* --------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
         .stChatInput > div {
             width: 50% !important; 
             min-width: 400px;
@@ -972,6 +971,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
