@@ -104,6 +104,7 @@ def custom_header(text):
 
 # 3. ОТРИСОВКА В САЙДБАРЕ
 with st.sidebar:
+
     # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ВОШЕЛ
     if st.session_state.get("authentication_status"):
         user_name = st.session_state['name']
@@ -132,18 +133,19 @@ with st.sidebar:
             st.session_state["authentication_status"] = None
             st.session_state["username"] = None
             st.rerun()
-        st.session_state.user_email = st.session_state["username"]
-    
-   # ЕСЛИ НЕ ВОШЕЛ
-else:
-    st.info("👀 Вы в режиме **Гостя**")
 
-    # Меню входа раскрывается только если кнопка поставила флаг
-    with st.expander(
-        "🔐 Вход / Регистрация",
-        expanded=st.session_state.get("force_open_login", False)
-    ):
-        tab_login, tab_reg = st.tabs(["Вход", "Создать"])
+        st.session_state.user_email = st.session_state["username"]
+
+    # ЕСЛИ НЕ ВОШЕЛ  ← ВЕРНУТО ВНУТРЬ sidebar!!!
+    else:
+        st.info("👀 Вы в режиме **Гостя**")
+
+        with st.expander(
+            "🔐 Вход / Регистрация",
+            expanded=st.session_state.get("force_open_login", False)
+        ):
+            tab_login, tab_reg = st.tabs(["Вход", "Создать"])
+
 
 
             # --- ВХОД ---
@@ -928,6 +930,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
