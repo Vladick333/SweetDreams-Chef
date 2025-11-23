@@ -749,46 +749,45 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИНАЛЬНЫЙ JS) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИНАЛЬНЫЙ СТАБИЛЬНЫЙ ВАРИАНТ) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # Мы используем components.html для выполнения JS без перезагрузки Python
-    components.html("""
-    <script>
-        function openSidebar() {
-            // МЕТОД 1 (Надежный): Отправка сообщения внутреннему API Streamlit
-            window.parent.postMessage({
-                type: "streamlit:setSidebarState",
-                collapsed: false
-            }, "*");
-            
-            // МЕТОД 2 (Резерв): Прямое нажатие на стрелку (для старых версий)
-            const arrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-            if (arrow) {
-                arrow.click();
-            }
-        }
-    </script>
-    
-    <div style="position: fixed; top: 90px; right: 15px; z-index: 999999;">
-        <button class="login-action-btn" onclick="openSidebar()" style="
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0.5rem 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 16px;
-        ">
-            V Войти
-        </button>
-    </div>
-    """, height=1, scrolling=False)
+    # 1. CSS (Крепим кнопку на удобном месте)
+    st.markdown("""
+    <style>
+    div.stButton > button[kind="primary"] {
+        position: fixed !important;
+        top: 120px !important; /* НОВАЯ УДОБНАЯ ПОЗИЦИЯ */
+        right: 15px !important;
+        z-index: 99999 !important;
+        background-color: #4285F4 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
+        font-weight: bold !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+        width: auto !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #357ae8 !important;
+        transform: scale(1.05) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
+    # 2. Кнопка (При нажатии устанавливает флаг и показывает подсказку)
+    if st.button("V Войти", key="float_login_btn", type="primary"):
+        
+        # Устанавливаем флаг, чтобы раскрыть Expander в сайдбаре
+        st.session_state['force_open_login'] = True
+        
+        # Показываем подсказку (100% надежный метод)
+        st.toast("⬅ Нажмите на стрелочку меню слева для входа!", icon="⚠️")
+        
+        # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
+        st.rerun()
 # --- САЙДБАР ---
 with st.sidebar:
     st.title("⚙️ МЕНЮ")
@@ -928,6 +927,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
