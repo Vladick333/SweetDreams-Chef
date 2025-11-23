@@ -14,6 +14,7 @@ import streamlit.components.v1 as components
 import yaml
 from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
+import bcrypt # <--- ДОБАВИТЬ ЭТО К ОСТАЛЬНЫМ ИМПОРТАМ
 # ==========================================
 
 # ==============================================================================
@@ -38,7 +39,7 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ (РУЧНАЯ ФОРМА: 3 ПОЛЯ)
+# 1.2. АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ (ИСПРАВЛЕНО: BCRYPT + ПЕРЕВОД)
 # ==============================================================================
 try:
     with open('config.yaml') as file:
@@ -47,7 +48,7 @@ except FileNotFoundError:
     st.error("⚠️ Файл config.yaml не найден!")
     st.stop()
 
-# Инициализация (нужна для входа)
+# Инициализация
 authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
@@ -59,22 +60,22 @@ authenticator = stauth.Authenticate(
 if st.session_state.get("authentication_status"):
     st.session_state.user_email = st.session_state["username"]
     with st.sidebar:
-        # Показываем имя или почту
-        user_name = config['credentials']['usernames'][st.session_state["username"]].get('name', 'Пользователь')
+        # Пытаемся получить имя, если его нет - пишем просто логин
+        user_data = config['credentials']['usernames'].get(st.session_state["username"], {})
+        user_name = user_data.get('name', st.session_state["username"])
+        
         st.write(f"👋 Привет, *{user_name}*!")
         authenticator.logout('Выйти', 'sidebar')
 
 # --- ЕСЛИ НЕ ВОШЛИ ---
 else:
-    # Две вкладки
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-  # 1. ВХОД (НА РУССКОМ)
+    # 1. ВХОД (С ПЕРЕВОДОМ)
     with tab_login:
         try:
             authenticator.login(
                 location='main',
-                # Переводим поля на русский язык
                 fields={
                     'username': 'Электронная почта',
                     'password': 'Пароль',
@@ -89,16 +90,13 @@ else:
         elif st.session_state["authentication_status"] is None:
             st.warning('Введите данные для входа')
 
-    # 2. РЕГИСТРАЦИЯ (ВАША КАСТОМНАЯ ФОРМА)
+    # 2. РЕГИСТРАЦИЯ (С ПРЯМЫМ ШИФРОВАНИЕМ ЧЕРЕЗ BCRYPT)
     with tab_reg:
         with st.form("Registration_Form"):
             st.write("Создание нового аккаунта")
-            # Только 3 поля, как вы просили
             new_email = st.text_input("Электронная почта")
             new_pass = st.text_input("Пароль", type="password")
             new_pass_2 = st.text_input("Подтвердите пароль", type="password")
-            
-            # Кнопка отправки
             submit_reg = st.form_submit_button("Зарегистрироваться")
 
         if submit_reg:
@@ -107,33 +105,32 @@ else:
             elif new_pass != new_pass_2:
                 st.error("❌ Пароли не совпадают!")
             elif new_email in config['credentials']['usernames']:
-                st.error("❌ Такая почта уже зарегистрирована!")
+                st.error("❌ Такая почта уже есть!")
             else:
-                # Если всё ок - создаем пользователя
                 try:
-                    # 1. Хешируем пароль (шифруем)
-                    hashed_pass = stauth.Hasher([new_pass]).generate()[0]
+                    # !!! ИСПРАВЛЕНИЕ ОШИБКИ HASHER !!!
+                    # Используем bcrypt напрямую, это надежнее
+                    hashed_bytes = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt())
+                    hashed_pass_str = hashed_bytes.decode('utf-8')
                     
-                    # 2. Добавляем в структуру конфига
-                    # Используем email как логин и как имя (раз других полей нет)
+                    # Записываем в конфиг
                     config['credentials']['usernames'][new_email] = {
-                        'name': new_email, 
+                        'name': new_email,
                         'email': new_email,
-                        'password': hashed_pass,
+                        'password': hashed_pass_str,
                         'failed_login_attempts': 0,
                         'logged_in': False
                     }
                     
-                    # 3. Сохраняем в файл
                     with open('config.yaml', 'w') as file:
                         yaml.dump(config, file, default_flow_style=False)
                     
-                    st.success("✅ Аккаунт успешно создан! Теперь перейдите на вкладку 'Вход'.")
+                    st.success("✅ Аккаунт создан! Перейдите на вкладку 'Вход'.")
                     
                 except Exception as e:
-                    st.error(f"Ошибка при сохранении: {e}")
+                    st.error(f"Ошибка сохранения: {e}")
 
-    # Стоп, пока не войдут
+    # Стоп
     if not st.session_state.get("authentication_status"):
         st.stop()
 # ==============================================================================
@@ -881,6 +878,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
