@@ -39,7 +39,7 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (БЕЗ ФАЙЛА CONFIG.YAML)
+# 1.2. АВТОРИЗАЦИЯ (ИСПРАВЛЕННАЯ)
 # ==============================================================================
 import streamlit_authenticator as stauth
 
@@ -63,14 +63,8 @@ if 'auth_config' not in st.session_state:
             'key': 'random_signature_key',
             'expiry_days': 1
         },
-        'theme': {
-            'login': {
-                'username': 'Логин',
-                'password': 'Пароль',
-                'button': 'Войти',
-                'title': 'Авторизация'
-            }
-        }
+        # ВАЖНО: Добавляем пустое поле, чтобы библиотека не ругалась
+        'preauthorized': {'emails': []} 
     }
 
 # 2. ИНИЦИАЛИЗАЦИЯ
@@ -97,12 +91,17 @@ with st.sidebar:
         choice = st.radio("Меню:", ["Вход", "Регистрация"], horizontal=True, label_visibility="collapsed")
         
         if choice == "Вход":
-            name, authentication_status, username = authenticator.login('main')
-            
-            if authentication_status is False:
-                st.error('Неверный логин или пароль')
-            elif authentication_status is None:
-                st.warning('Введите данные')
+            # ИСПРАВЛЕНИЕ: Добавили заголовок 'Вход' первым аргументом
+            try:
+                name, authentication_status, username = authenticator.login('Вход', 'main')
+                
+                if authentication_status is False:
+                    st.error('Неверный логин или пароль')
+                elif authentication_status is None:
+                    st.warning('Введите данные')
+            except TypeError:
+                # Запасной вариант для старых версий библиотеки
+                name, authentication_status, username = authenticator.login('main')
                 
         else: # РЕГИСТРАЦИЯ (ВРЕМЕННАЯ)
             with st.form("RegForm"):
