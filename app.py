@@ -748,18 +748,18 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! КНОПКА ВХОДА: НИЖЕ, НЕ ПЕРЕКРЫВАЕТ МЕНЮ, РАБОТАЕТ !!!
+# !!! КНОПКА ВХОДА (MAXIMUM POWER) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
+    # 1. Стили (Кнопка на месте, z-index меньше меню)
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 150px !important; /* ОПУСТИЛ ЕЩЕ НИЖЕ */
+        top: 150px !important;
         right: 20px !important;
-        /* z-index 50 позволяет сайдбару (у которого z-index 100) перекрывать кнопку */
-        z-index: 50 !important; 
+        z-index: 50 !important;
         background-color: #4285F4 !important;
         color: white !important;
         border: none !important;
@@ -769,41 +769,52 @@ if not st.session_state.get("authentication_status"):
         box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
         width: auto !important;
     }
-    div.stButton > button[kind="primary"]:hover {
-        background-color: #357ae8 !important;
-        transform: scale(1.05) !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-    # При нажатии кнопки запускаем скрипт
+    # 2. Кнопка
     if st.button("V Войти", key="float_login_btn", type="primary"):
+        # Ставим флаг, чтобы раскрыть форму входа внутри меню
+        st.session_state['force_open_login'] = True
         
-        # В этом блоке 3 способа открыть меню (один из них сработает)
+        # 3. ЯДЕРНЫЙ СКРИПТ ОТКРЫТИЯ МЕНЮ
         components.html("""
         <script>
-            function openSidebar() {
-                // 1. Через внутренний API Streamlit
-                window.parent.postMessage({type: "streamlit:setSidebarState", collapsed: false}, "*");
+            function clickMenu() {
+                // Ищем кнопку меню по всем возможным признакам
+                const selectors = [
+                    '[data-testid="stSidebarCollapsedControl"]', // Стандарт
+                    '[data-testid="collapsedControl"]', // Старый стандарт
+                    'button[kind="header"]', // Мобильный хедер
+                    '#stSidebarCollapsedControl' // ID
+                ];
                 
-                // 2. Через клик по стрелочке (стандартный селектор)
-                const btn1 = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-                if (btn1) btn1.click();
+                let found = false;
+                selectors.forEach(sel => {
+                    const btn = window.parent.document.querySelector(sel);
+                    if (btn) {
+                        btn.click();
+                        found = true;
+                    }
+                });
                 
-                // 3. Через клик по кнопке хедера (резервный селектор)
-                const btn2 = window.parent.document.querySelector('button[kind="header"]');
-                if (btn2) btn2.click();
+                // Если нашли - отлично. Если нет - пробуем отправить сообщение.
+                if (!found) {
+                    window.parent.postMessage({type: "streamlit:setSidebarState", collapsed: false}, "*");
+                }
             }
-            // Запускаем сразу
-            openSidebar();
-            // И еще раз через мгновение для надежности
-            setTimeout(openSidebar, 100);
+
+            // Пытаемся нажать МНОГО РАЗ (на случай лагов телефона)
+            clickMenu();
+            setTimeout(clickMenu, 100);
+            setTimeout(clickMenu, 300);
+            setTimeout(clickMenu, 500);
+            setTimeout(clickMenu, 1000);
         </script>
         """, height=0, width=0)
         
-        # Открываем вкладку входа (ставим флаг)
-        st.session_state['force_open_login'] = True
-
+        # 4. Визуальная подсказка (на случай если JS заблокирован браузером)
+        st.toast("⬅ НАЖМИТЕ НА СТРЕЛОЧКУ СЛЕВА ВВЕРХУ!")
 
 # --- САЙДБАР ---
 with st.sidebar:
@@ -943,6 +954,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
