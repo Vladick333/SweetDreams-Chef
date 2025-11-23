@@ -91,7 +91,7 @@ def inject_css():
         }
 
 
-        /* --- ГЛАВНЫЕ КНОПКИ (ОБЫЧНЫЕ, БЕЗ АНИМАЦИИ) --- */
+       /* --- ГЛАВНЫЕ КНОПКИ (ОБЫЧНЫЕ, БЕЗ АНИМАЦИИ) --- */
         .main .stButton button {
             background-color: #1a1a1a !important; 
             border: 2px solid #333 !important; 
@@ -104,12 +104,14 @@ def inject_css():
             box-shadow: none !important; /* УБРАН ТЕНЬ */
             transition: all 0.1s ease-in-out !important;
             transform: none !important; /* УБРАНО SCALE */
-        }
-        /* === ВОТ ЭТИ СТРОЧКИ НУЖНЫ ДЛЯ АЙФОНА И XIAOMI === */
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-            /* ================================================ */
+            
+            /* === ВСТАВЛЯЕМ СЮДА (ВНУТРЬ СКОБОК) === */
+            -webkit-appearance: none !important;         /* 1. Убирает системный стиль */
+            -moz-appearance: none !important;            /* 2. Для Firefox */
+            appearance: none !important;                 /* 3. Стандарт */
+            background-image: none !important;           /* 4. Убирает "стеклянный" блик на Айфоне */
+            -webkit-text-fill-color: #FFFFFF !important; /* 5. Красит текст в белый на Xiaomi */
+            /* ====================================== */
         }
 
         /* Стиль первой кнопки (как на скриншоте) */
@@ -736,6 +738,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
