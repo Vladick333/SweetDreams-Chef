@@ -765,52 +765,64 @@ def scroll_to_end(delay=100):
 
 
 
-# =================================================================
-# !!! БЛОК 2: ПЛАВАЮЩАЯ КНОПКА (С ФЛАГОМ) !!!
-# =================================================================
-if not st.session_state.get("authentication_status"):
-    
-    # 1. CSS (Крепим кнопку на удобном месте)
-    st.markdown("""
-    <style>
-    div.stButton > button[kind="primary"] {
-        position: fixed !important;
-        top: 100px !important; /* Удобная позиция */
-        right: 20px !important;
-        z-index: 99999 !important;
-        background-color: #4285F4 !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 1.2rem !important;
-        font-weight: bold !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
-        width: auto !important;
-    }
-    div.stButton > button[kind="primary"]:hover {
-        background-color: #357ae8 !important;
-        transform: scale(1.05) !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+## --- ВНУТРИ with t1: (Сразу после заголовка Vladыка AI) ---
 
-    # 2. Кнопка (При нажатии устанавливает флаг)
-    if st.button("V Войти", key="float_login_btn", type="primary"):
+# БЛОК ВРЕМЕННОГО, СТИЛИЗОВАННОГО УВЕДОМЛЕНИЯ (2 СЕКУНДЫ)
+if st.session_state.get('show_manual_prompt'):
+    # Сбрасываем флаг сразу, чтобы уведомление рендерилось только один раз после нажатия
+    st.session_state['show_manual_prompt'] = False 
+    
+    # Используем компоненты для JS-таймера, который покажет рамку и скроет через 2с
+    components.html("""
+    <style>
+        @keyframes fadeOut { from {opacity: 1;} to {opacity: 0;} }
+        .prompt-box {
+            /* Фиксируем по центру, чтобы не ломало макет */
+            position: fixed;
+            top: 20px;
+            left: 50%; 
+            transform: translateX(-50%);
+            z-index: 10000;
+            padding: 10px 15px;
+            /* СТИЛЬ ВАШЕЙ НЕОНОВОЙ РАМКИ */
+            border: 2px solid #00E5FF; 
+            border-radius: 10px;
+            background: #111;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.5); /* Неоновый свет */
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+            /* Анимация: держим 1.5с, потом 0.5с плавно исчезаем (ВСЕГО 2 СЕК) */
+            animation: fadeOut 0.5s forwards;
+            animation-delay: 1.5s; 
+        }
+    </style>
+    
+    <div id="persistent-prompt" class="prompt-box">
+        ⬅ Нажмите на стрелочку меню слева для входа
+    </div>
+    
+    <script>
+        // Код, который удаляет элемент через 2 секунды
+        setTimeout(() => {
+            const promptBox = window.parent.document.getElementById('persistent-prompt');
+            if (promptBox) {
+                promptBox.remove();
+            }
+        }, 2000); // 2000ms = 2 секунды
         
-        # Устанавливаем флаги
-        st.session_state['force_open_login'] = True
-        st.session_state['show_login_toast_flag'] = True # <-- Активируем Toast (который сработает после перезагрузки)
-        
-        # 3. Пытаемся открыть меню (JS Best Effort)
-        components.html("""
-        <script>
-            const sidebarArrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-            if (sidebarArrow) { sidebarArrow.click(); }
-        </script>
-        """, height=0, width=0)
-        
-        # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
-        st.rerun()
+        // Дополнительный код: Пытаемся удалить его, если меню открывается (Best Effort)
+        const sidebarArrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+        if (sidebarArrow) {
+             sidebarArrow.addEventListener('click', () => {
+                 const promptBox = window.parent.document.getElementById('persistent-prompt');
+                 if (promptBox) { promptBox.remove(); }
+             });
+        }
+    </script>
+    """, height=1, width=1)
+    # Height=1, width=1, чтобы скрыть iframe, но запустить JS
 
 # --- САЙДБАР ---
 with st.sidebar:
@@ -951,6 +963,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
