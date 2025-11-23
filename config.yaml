@@ -1,0 +1,14 @@
+credentials:
+  usernames:
+    admin:
+      email: admin@gmail.com
+      failed_login_attempts: 0
+      logged_in: false
+      name: Администратор
+      password: "123"
+cookie:
+  expiry_days: 30
+  key: random_signature_key
+  name: some_cookie_name
+preauthorized:
+  emails: []
