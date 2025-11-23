@@ -757,17 +757,17 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (С ПОДСКАЗКОЙ) !!!
+# !!! КНОПКА ВХОДА (ФИНАЛ: СТАБИЛЬНЫЙ TOAST) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
-
-    # 1. CSS — плавающая кнопка
+    
+    # 1. CSS (Крепим кнопку на удобном месте)
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 100px !important;
-        right: 20px !important;
+        top: 90px !important; /* Устанавливаем комфортную высоту */
+        right: 15px !important;
         z-index: 99999 !important;
         background-color: #4285F4 !important;
         color: white !important;
@@ -785,10 +785,16 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка
+    # 2. Кнопка (При нажатии устанавливает флаг и показывает Toast)
     if st.button("V Войти", key="float_login_btn", type="primary"):
-        st.session_state["force_open_login"] = True
-        st.toast("⬅ Открыл форму входа в левом меню", icon="👉")
+        
+        # Устанавливаем флаг, чтобы раскрыть Expander в сайдбаре
+        st.session_state['force_open_login'] = True
+        
+        # 3. ГАРАНТИРОВАННО ПОКАЗЫВАЕМ ПОДСКАЗКУ (~4 секунды)
+        st.toast("⬅ Нажмите на стрелочку меню слева для входа", icon="👉")
+        
+        # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
         st.rerun()
 
 # --- САЙДБАР ---
@@ -930,6 +936,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
