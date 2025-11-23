@@ -660,7 +660,7 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС (РАБОЧАЯ КНОПКА V -> ОТКРЫВАЕТ МЕНЮ И ВХОД)
+# 5. ИНТЕРФЕЙС (ФИНАЛ: БЕЗ МОРГАНИЯ + РАБОЧЕЕ МЕНЮ)
 # ==============================================================================
 import json
 import os
@@ -747,26 +747,27 @@ def scroll_to_end(delay=100):
     components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
-# =====================================================
-# !!! УМНАЯ КНОПКА ВХОДА (ОТКРЫВАЕТ МЕНЮ) !!!
-# =====================================================
+# =================================================================
+# !!! УМНАЯ КНОПКА ВХОДА (БЕЗ ПЕРЕЗАГРУЗКИ) !!!
+# =================================================================
+# Показываем кнопку только если НЕ вошли
 if not st.session_state.get("authentication_status"):
     
-    # 1. CSS (Кнопка справа сверху)
+    # 1. CSS: Крепим кнопку справа сверху
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 100px !important;
+        top: 90px !important;
         right: 20px !important;
-        z-index: 999999 !important;
+        z-index: 99999 !important;
         background-color: #4285F4 !important;
         color: white !important;
         border: none !important;
         border-radius: 8px !important;
         padding: 0.5rem 1.2rem !important;
         font-weight: bold !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
         width: auto !important;
     }
     div.stButton > button[kind="primary"]:hover {
@@ -776,20 +777,23 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Логика нажатия
+    # 2. Кнопка: При нажатии выполняется код внутри
     if st.button("V Войти", key="float_login_btn", type="primary"):
-        # А) Ставим флаг, что надо раскрыть форму входа
-        st.session_state['force_open_login'] = True
         
-        # Б) Открываем сайдбар через JS (самый надежный метод postMessage)
+        # 3. Открываем сайдбар БЕЗ st.rerun()
+        # Мы просто вставляем невидимый скрипт, который нажимает на стрелку
         components.html("""
         <script>
-            window.parent.postMessage({type: "streamlit:setSidebarState", collapsed: false}, "*");
+            // Ищем кнопку сворачивания/разворачивания меню
+            const buttons = window.parent.document.querySelectorAll('[data-testid="stSidebarCollapsedControl"]');
+            if (buttons.length > 0) {
+                buttons[0].click();
+            }
         </script>
         """, height=0, width=0)
         
-        # В) Перезагружаем, чтобы применить открытие
-        st.rerun()
+        # Если нужно автоматически раскрыть экспандер входа (опционально)
+        st.session_state['force_open_login'] = True
 
 
 # --- САЙДБАР ---
@@ -847,7 +851,7 @@ with t1:
         st.session_state.history.append({"role": "user", "content": q})
         st.session_state.trigger_rerun = True
 
-    # Твой дизайн кнопок (2x2)
+    # СЕТКА КНОПОК (ТВОЙ ДИЗАЙН)
     col_grid = st.columns([1, 1]) 
     
     with col_grid[0]:
@@ -931,6 +935,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
