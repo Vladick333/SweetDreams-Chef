@@ -748,12 +748,13 @@ def scroll_to_end(delay=100):
     components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
+
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (С ТЕМПЕРАТУРНОЙ ПОДСКАЗКОЙ) !!!
+# !!! БЛОК 2: ПЛАВАЮЩАЯ КНОПКА (С JS И ФЛАГОМ) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. CSS (Позиция и дизайн остаются)
+    # 1. CSS: Позиция кнопки
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
@@ -777,14 +778,29 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка (При нажатии устанавливает флаг и показывает Toast)
+    # 2. Кнопка (При нажатии устанавливает флаги и запускает JS)
     if st.button("V Войти", key="float_login_btn", type="primary"):
         
-        # Устанавливаем флаг, чтобы раскрыть Expander в сайдбаре
+        # Устанавливаем флаги
         st.session_state['force_open_login'] = True
+        st.session_state['show_login_toast'] = True # Активирует Toast в Блоке 1
         
-        # 3. ПОКАЗЫВАЕМ МАЛЕНЬКУЮ ПОДСКАЗКУ (TOAST)
-        st.toast("⬅ Нажмите на стрелочку меню слева для входа", icon="👉")
+        # 3. АГРЕССИВНЫЙ СКРИПТ ОТКРЫТИЯ МЕНЮ (Best Effort)
+        components.html("""
+        <script>
+            // Метод 1: Прямая команда Streamlit
+            window.parent.postMessage({
+                type: "streamlit:setSidebarState",
+                collapsed: false
+            }, "*");
+            
+            // Метод 2: Эмуляция нажатия на стрелку
+            const arrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (arrow) {
+                arrow.click();
+            }
+        </script>
+        """, height=0, width=0)
         
         # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
         st.rerun()
@@ -927,6 +943,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
