@@ -69,11 +69,12 @@ else:
     # Две вкладки
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-    # 1. ВХОД (Стандартный виджет, переведенный на русский)
+  # 1. ВХОД (НА РУССКОМ)
     with tab_login:
         try:
             authenticator.login(
                 location='main',
+                # Переводим поля на русский язык
                 fields={
                     'username': 'Электронная почта',
                     'password': 'Пароль',
@@ -880,6 +881,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
