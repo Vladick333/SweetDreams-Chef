@@ -39,12 +39,14 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (РУССКАЯ РЕГИСТРАЦИЯ + ПОДТВЕРЖДЕНИЕ)
+# 1.2. АВТОРИЗАЦИЯ (ПОЛНОСТЬЮ НА РУССКОМ + ГОЛУБЫЕ ЗАГОЛОВКИ)
 # ==============================================================================
 import streamlit_authenticator as stauth
+import bcrypt # Нужен для проверки пароля вручную
 
-# 1. НАСТРОЙКИ
+# 1. НАСТРОЙКИ (БАЗА ПОЛЬЗОВАТЕЛЕЙ В ПАМЯТИ)
 if 'auth_config' not in st.session_state:
+    # Хеш пароля "123"
     hashed_pass = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
     
     st.session_state.auth_config = {
@@ -56,96 +58,105 @@ if 'auth_config' not in st.session_state:
                     'email': 'admin@gmail.com',
                 }
             }
-        },
-        'cookie': {
-            'name': 'vladyka_ai_cookie',
-            'key': 'random_signature_key',
-            'expiry_days': 1
-        },
-        'preauthorized': {'emails': []},
-        'theme': {
-            'login': {
-                'username': 'Почта',
-                'password': 'Пароль',
-                'button': 'Войти',
-                'title': 'Вход'
-            }
         }
     }
 
-# 2. ИНИЦИАЛИЗАЦИЯ
-authenticator = stauth.Authenticate(
-    st.session_state.auth_config['credentials'],
-    st.session_state.auth_config['cookie']['name'],
-    st.session_state.auth_config['cookie']['key'],
-    st.session_state.auth_config['cookie']['expiry_days']
-)
+# --- СТИЛЬ ЗАГОЛОВКОВ (ГОЛУБОЙ, КАК ВЫ ПРОСИЛИ) ---
+# Мы используем HTML, чтобы сделать красиво
+def custom_header(text):
+    st.markdown(f"""
+    <h2 style="
+        color: #00E5FF; 
+        font-family: 'Outfit', sans-serif; 
+        font-weight: 800; 
+        border: none; 
+        padding: 0; 
+        margin-bottom: 10px;
+        margin-top: 0;
+    ">{text}</h2>
+    """, unsafe_allow_html=True)
 
-# 3. МЕНЮ В САЙДБАРЕ
+# 3. ОТРИСОВКА В САЙДБАРЕ
 with st.sidebar:
-    # ЕСЛИ ВОШЕЛ
+    # Если пользователь уже вошел
     if st.session_state.get("authentication_status"):
         st.success(f"👤 Привет, **{st.session_state['name']}**!")
-        authenticator.logout('Выйти', 'main')
+        if st.button("Выйти", use_container_width=True):
+            st.session_state["authentication_status"] = None
+            st.session_state["username"] = None
+            st.rerun()
         st.session_state.user_email = st.session_state["username"]
     
-    # ЕСЛИ НЕ ВОШЕЛ
+    # Если не вошел
     else:
         st.info("👀 Вы в режиме **Гостя**")
         
-        with st.expander("🔐 Вход / Регистрация", expanded=False):
+        with st.expander("🔐 Вход / Регистрация", expanded=True):
             tab_login, tab_reg = st.tabs(["Вход", "Создать"])
 
-            # --- ВХОД (БИБЛИОТЕКА) ---
+            # --- ВКЛАДКА 1: ВХОД (РУЧНАЯ, ЧТОБЫ БЫЛО НА РУССКОМ) ---
             with tab_login:
-                try:
-                    # Пытаемся войти через стандартную форму
-                    authenticator.login('main')
-                    
-                    # Обработка ошибок (визуальная)
-                    if st.session_state.get("authentication_status") is False:
-                        st.error('Неверная почта или пароль')
-                    elif st.session_state.get("authentication_status") is None:
-                        pass 
-                except Exception as e:
-                    st.warning("Введите данные для входа")
+                # Голубой заголовок
+                custom_header("Вход в систему")
+                
+                with st.form("LoginForm"):
+                    login_user = st.text_input("Почта")
+                    login_pass = st.text_input("Пароль", type="password")
+                    btn_login = st.form_submit_button("Войти", use_container_width=True)
+                
+                if btn_login:
+                    users = st.session_state.auth_config['credentials']['usernames']
+                    if login_user in users:
+                        # Проверяем пароль
+                        stored_hash = users[login_user]['password']
+                        # Если пароль верный
+                        if bcrypt.checkpw(login_pass.encode('utf-8'), stored_hash.encode('utf-8')):
+                            st.session_state["authentication_status"] = True
+                            st.session_state["username"] = login_user
+                            st.session_state["name"] = users[login_user]['name']
+                            st.toast("✅ Успешный вход!")
+                            st.rerun()
+                        else:
+                            st.error("Неверный пароль")
+                    else:
+                        st.error("Пользователь не найден")
 
-            # --- РЕГИСТРАЦИЯ (РУЧНАЯ, ПО ВАШЕМУ ЗАПРОСУ) ---
+            # --- ВКЛАДКА 2: РЕГИСТРАЦИЯ (РУЧНАЯ) ---
             with tab_reg:
+                # Голубой заголовок (Красивый, как Login)
+                custom_header("Новый пользователь")
+                
                 with st.form("RegForm"):
-                    st.write("Новый пользователь")
+                    new_user = st.text_input("Придумайте Почту")
+                    new_name = st.text_input("Ваше Имя")
+                    new_pass = st.text_input("Пароль", type="password")
+                    rep_pass = st.text_input("Повторите пароль", type="password")
                     
-                    # Поля как вы просили
-                    new_user = st.text_input("Почта", key="reg_email")
-                    new_name = st.text_input("Имя", key="reg_name")
-                    new_pass = st.text_input("Пароль", type="password", key="reg_pass")
-                    rep_pass = st.text_input("Подтвердить пароль", type="password", key="reg_pass_2")
+                    btn_reg = st.form_submit_button("Зарегистрироваться", use_container_width=True)
                     
-                    submitted = st.form_submit_button("Зарегистрироваться")
-                    
-                    if submitted:
-                        if not (new_user and new_name and new_pass and rep_pass):
-                            st.error("❌ Заполните все поля!")
+                    if btn_reg:
+                        if not (new_user and new_name and new_pass):
+                            st.error("Заполните все поля!")
                         elif new_pass != rep_pass:
-                            st.error("❌ Пароли не совпадают!")
+                            st.error("Пароли не совпадают!")
                         elif new_user in st.session_state.auth_config['credentials']['usernames']:
-                            st.error("❌ Такая почта уже есть!")
+                            st.error("Такая почта уже есть!")
                         else:
                             try:
-                                # Создаем пользователя
-                                hashed_pw = stauth.Hasher([new_pass]).generate()[0]
+                                # Хешируем пароль (создаем защиту)
+                                hashed_pw = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                                
+                                # Сохраняем в базу
                                 st.session_state.auth_config['credentials']['usernames'][new_user] = {
                                     'name': new_name,
                                     'password': hashed_pw,
                                     'email': new_user
                                 }
-                                # Обновляем библиотеку
-                                authenticator.credentials = st.session_state.auth_config['credentials']
-                                st.success("✅ Успешно! Перейдите на вкладку 'Вход'.")
+                                st.success("✅ Аккаунт создан! Теперь войдите.")
                             except Exception as e:
                                 st.error(f"Ошибка: {e}")
 
-# Если не вошел - гость
+# Если не вошел - пускаем как гостя
 if not st.session_state.get("authentication_status"):
     st.session_state.user_email = "Гость"
 # ==============================================================================
@@ -893,6 +904,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
