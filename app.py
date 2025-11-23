@@ -765,24 +765,20 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИКСАЦИЯ НА ДИСКЕ: RIGHT + 160px) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (МАКСИМАЛЬНАЯ ФИКСАЦИЯ ВПРАВО) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
     # 1. CSS: Крепим кнопку справа сверху (ОЧЕНЬ АГРЕССИВНЫЙ CSS)
     st.markdown("""
     <style>
-    /* 1. Нацеливаемся на родительский блок кнопки, чтобы зафиксировать его */
-    div[data-testid="stVerticalBlock"] > div > div:nth-child(1) div[data-testid="stHorizontalBlock"] > div:last-child > div.stButton {
-        position: fixed !important; 
-        top: 160px !important; /* УСТАНОВКА НОВОЙ НИЗКОЙ ПОЗИЦИИ */
-        right: 20px !important;
-        left: unset !important; /* ГАРАНТИРУЕМ, ЧТО КНОПКА НЕ УЙДЕТ ВЛЕВО */
-        z-index: 99999999 !important; /* МАКСИМАЛЬНЫЙ ПРИОРИТЕТ */
-    }
-    
-    /* 2. Нацеливаемся на саму кнопку для стилей */
+    /* Нацеливаемся на саму кнопку (самый прямой путь) */
     div.stButton > button[kind="primary"] {
+        position: fixed !important; 
+        top: 140px !important; /* Фиксируем на удобной высоте */
+        right: 20px !important; /* CRITICAL: Закрепляем СПРАВА */
+        left: unset !important; /* CRITICAL: Сбрасываем крепление к левому краю */
+        z-index: 99999999 !important; /* МАКСИМАЛЬНЫЙ ПРИОРИТЕТ */
         background-color: #4285F4 !important;
         color: white !important;
         border-radius: 8px !important;
@@ -810,7 +806,7 @@ if not st.session_state.get("authentication_status"):
         # 2. АГРЕССИВНЫЙ JS для открытия меню
         components.html("""
         <script>
-            // Отправляем сигнал в Streamlit, чтобы он сам открыл сайдбар
+            // Отправляем сигнал Streamlit, чтобы он сам открыл сайдбар
             window.parent.postMessage({
                 type: "streamlit:setSidebarState",
                 collapsed: false
@@ -818,7 +814,7 @@ if not st.session_state.get("authentication_status"):
         </script>
         """, height=0, width=0)
         
-        # 3. Перезагружаем
+        # 3. Перезагружаем (для активации Toast и Expander)
         st.rerun()
 # --- САЙДБАР ---
 with st.sidebar:
@@ -959,6 +955,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
