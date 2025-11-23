@@ -142,7 +142,7 @@ with st.sidebar:
             with tab_reg:
                 custom_header("Новый пользователь")
                 with st.form("RegForm"):
-                    new_user = st.text_input("Придумайте Почту")
+                    new_user = st.text_input("Введите Почту")
                     new_name = st.text_input("Ваше Имя")
                     new_pass = st.text_input("Пароль", type="password")
                     rep_pass = st.text_input("Повторите пароль", type="password")
@@ -915,6 +915,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
