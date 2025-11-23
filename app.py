@@ -117,13 +117,29 @@ def inject_css():
             appearance: none !important;
             
             /* Размеры и шрифты (Ваш дизайн) */
-            padding: 15px 5px !important;
+            padding: 5px 5px !important;    /* Чуть меньше отступы */
             font-weight: 900 !important;
             text-transform: uppercase !important;
             font-size: 16px !important;
-            transition: all 0.1s ease-in-out !important;
-            transform: none !important;
-            min-height: 55px !important;
+            
+            /* АНИМАЦИЯ И РАЗМЕР (ИСПРАВЛЕНО ДЛЯ АЙФОНА) */
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            transform: none !important;     /* В покое не крутимся */
+            min-height: 45px !important;    /* УМЕНЬШИЛ С 55 ДО 45, ЧТОБЫ ВЛЕЗЛО */
+            height: auto !important;
+            white-space: normal !important; /* Разрешаем тексту переноситься */
+            
+            /* ВЫРАВНИВАНИЕ */
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        
+        /* Фикс текста внутри кнопки (чтобы не уезжал) */
+        div[data-testid="stButton"] > button p {
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.1 !important;
         }
 
         /* Фикс конкретно для "Secondary" кнопок (серых), чтобы они не были прозрачными */
@@ -151,6 +167,10 @@ def inject_css():
             background-color: #00E5FF !important; 
             color: #000000 !important;
             border-color: #00E5FF !important;
+            
+            /* ВОТ ЗДЕСЬ ВКЛЮЧАЕТСЯ АНИМАЦИЯ */
+            transform: translateY(-2px) scale(1.02) !important; 
+            box-shadow: 0 5px 15px rgba(0, 229, 255, 0.2) !important;
         }
 
         /* При нажатии */
@@ -158,6 +178,9 @@ def inject_css():
             background-color: #0099CC !important;
             color: #fff !important;
             border-color: #0099CC !important;
+            
+            /* ВОТ ЗДЕСЬ ЭФФЕКТ ВДАВЛИВАНИЯ */
+            transform: scale(0.95) !important; 
         }
 
         /* --- ТЕКСТ ИИ В ЧАТЕ (БЕЛЫЙ) --- */
@@ -756,6 +779,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
