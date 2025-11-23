@@ -91,7 +91,7 @@ def inject_css():
         }
 
 
-      /* --- ГЛАВНЫЕ КНОПКИ (БРОНЕБОЙНЫЙ ФИКС 2.0) --- */
+     /* --- ГЛАВНЫЕ КНОПКИ (БРОНЕБОЙНЫЙ ФИКС 2.0) --- */
         /* Используем более строгий селектор div[data-testid="stButton"] > button */
         /* Это заставит любой телефон подчиниться */
         
@@ -182,7 +182,6 @@ def inject_css():
             /* ВОТ ЗДЕСЬ ЭФФЕКТ ВДАВЛИВАНИЯ */
             transform: scale(0.95) !important; 
         }
-
         /* --- ТЕКСТ ИИ В ЧАТЕ (БЕЛЫЙ) --- */
         [data-testid="stChatMessageContent"] p, 
         [data-testid="stChatMessageContent"] li, 
@@ -779,6 +778,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
