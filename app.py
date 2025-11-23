@@ -39,7 +39,7 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (ПОЛНОСТЬЮ РУЧНАЯ: 100% РУССКИЙ ЯЗЫК)
+# 1.2. АВТОРИЗАЦИЯ (РУЧНАЯ: 100% РУССКИЙ ЯЗЫК + БЕЗ ОШИБОК)
 # ==============================================================================
 try:
     with open('config.yaml') as file:
@@ -48,7 +48,7 @@ except FileNotFoundError:
     st.error("⚠️ Файл config.yaml не найден!")
     st.stop()
 
-# Инициализация объекта (но не рисуем форму!)
+# Создаем объект (нужен для утилит), но рисовать им не будем
 authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
@@ -56,110 +56,95 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days']
 )
 
-# Проверка: вошел ли уже? (из куки или сессии)
+# --- ПРОВЕРКА: ВОШЕЛ ЛИ ПОЛЬЗОВАТЕЛЬ? ---
+# Проверяем нашу переменную сессии
 if st.session_state.get("authentication_status"):
-    # === ЕСЛИ УЖЕ ВОШЛИ ===
+    
+    # === ЕСЛИ УЖЕ ВОШЕЛ ===
     st.session_state.user_email = st.session_state["username"]
+    
     with st.sidebar:
+        # Достаем имя из конфига
         user_data = config['credentials']['usernames'].get(st.session_state["username"], {})
-        user_name = user_data.get('name', st.session_state["username"])
-        st.write(f"👋 Привет, *{user_name}*!")
-        authenticator.logout('Выйти', 'sidebar')
+        name_display = user_data.get('name', st.session_state["username"])
+        
+        st.write(f"👋 Привет, *{name_display}*!")
+        
+        # Кнопка выхода
+        if st.button("Выйти", key="logout_btn"):
+            st.session_state["authentication_status"] = None
+            st.session_state["username"] = None
+            st.rerun()
 
 else:
-    # === ЕСЛИ НЕ ВОШЛИ: РИСУЕМ СВОИ ФОРМЫ ===
+    # === ЕСЛИ НЕ ВОШЕЛ: РИСУЕМ СВОИ ФОРМЫ ===
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-    # 1. ВХОД (РУЧНАЯ ФОРМА)
+    # 1. ФОРМА ВХОДА (РУЧНАЯ)
     with tab_login:
-        with st.form("Login_Form"):
+        with st.form("LoginForm"):
             st.subheader("Вход в систему")
-            # Наши поля на русском
-            username_input = st.text_input("Электронная почта")
-            password_input = st.text_input("Пароль", type="password")
-            submit_login = st.form_submit_button("Войти")
-        
-        if submit_login:
-            if not username_input or not password_input:
-                st.error("❌ Введите почту и пароль")
+            login_email = st.text_input("Электронная почта")
+            login_pass = st.text_input("Пароль", type="password")
+            btn_login = st.form_submit_button("Войти")
+
+        if btn_login:
+            if login_email in config['credentials']['usernames']:
+                # Получаем зашифрованный пароль из файла
+                stored_hash = config['credentials']['usernames'][login_email]['password']
+                
+                # Проверяем пароль
+                if bcrypt.checkpw(login_pass.encode('utf-8'), stored_hash.encode('utf-8')):
+                    # УСПЕХ!
+                    st.session_state["authentication_status"] = True
+                    st.session_state["username"] = login_email
+                    st.session_state["name"] = config['credentials']['usernames'][login_email]['name']
+                    st.toast("✅ Успешный вход!")
+                    st.rerun()
+                else:
+                    st.error("❌ Неверный пароль")
             else:
-                try:
-                    # Проверяем пароль вручную через библиотеку (она сама все сделает)
-                    # В новых версиях используем login внутри try/except
-                    # Но так как мы делаем кастом, проще использовать внутреннюю логику
-                    # или просто использовать authenticator.login с правильными параметрами
-                    pass 
-                except:
-                    pass
-                
-                # АЛЬТЕРНАТИВНЫЙ ПУТЬ: Используем стандартный логин, но скрываем его CSS, 
-                # если не получается перевести. 
-                # НО ЛУЧШЕ ВСЕГО вернуться к authenticator.login и передать параметры ПРАВИЛЬНО для новой версии.
-                
-                # ВЕРСИЯ БИБЛИОТЕКИ 0.3.x требует так:
-                # authenticator.login('Login', 'main') -> и она сама рисует.
-                
-                # Если у вас НОВАЯ версия (0.4+), параметры изменились.
-                # Попробуем самый надежный способ для НОВЫХ версий:
-                pass
+                st.error("❌ Пользователь не найден")
 
-    # ДАВАЙТЕ СДЕЛАЕМ ПРОЩЕ:
-    # Если библиотека не дает перевести - мы просто используем ЕЁ логику, но ПРАВИЛЬНО.
-    
-    with tab_login:
-        try:
-            # Попытка для версии 0.4+ (где fields передаются в init, а не в login)
-            # Но так как мы уже инициализировали...
-            
-            # ДАВАЙТЕ ВЕРНЕМСЯ К БАЗЕ:
-            name, authentication_status, username = authenticator.login(
-                location='main',
-                fields={'username': 'Электронная почта', 'password': 'Пароль', 'login': 'Войти'}
-            )
-        except:
-            # Если не сработало (старая версия), пробуем без fields
-             authenticator.login(location='main')
-
-        if st.session_state["authentication_status"] is False:
-            st.error('❌ Неверная почта или пароль')
-        elif st.session_state["authentication_status"] is None:
-            st.warning('Введите данные для входа')
-
-    # 2. РЕГИСТРАЦИЯ (ОСТАВЛЯЕМ ВАШУ, ОНА РАБОТАЕТ)
+    # 2. ФОРМА РЕГИСТРАЦИИ (РУЧНАЯ)
     with tab_reg:
-        with st.form("Registration_Form"):
-            st.write("Создание нового аккаунта")
+        with st.form("RegForm"):
+            st.subheader("Новый аккаунт")
             new_email = st.text_input("Электронная почта")
             new_pass = st.text_input("Пароль", type="password")
             new_pass_2 = st.text_input("Подтвердите пароль", type="password")
-            submit_reg = st.form_submit_button("Зарегистрироваться")
+            btn_reg = st.form_submit_button("Зарегистрироваться")
 
-        if submit_reg:
+        if btn_reg:
             if not new_email or not new_pass:
                 st.error("❌ Заполните все поля!")
             elif new_pass != new_pass_2:
                 st.error("❌ Пароли не совпадают!")
             elif new_email in config['credentials']['usernames']:
-                st.error("❌ Такая почта уже есть!")
+                st.error("❌ Такая почта уже зарегистрирована!")
             else:
                 try:
+                    # Шифруем пароль
                     hashed_bytes = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt())
-                    hashed_pass_str = hashed_bytes.decode('utf-8')
+                    hashed_str = hashed_bytes.decode('utf-8')
                     
+                    # Сохраняем в конфиг
                     config['credentials']['usernames'][new_email] = {
                         'name': new_email,
                         'email': new_email,
-                        'password': hashed_pass_str,
+                        'password': hashed_str,
                         'failed_login_attempts': 0,
                         'logged_in': False
                     }
+                    
                     with open('config.yaml', 'w') as file:
                         yaml.dump(config, file, default_flow_style=False)
-                    st.success("✅ Аккаунт создан! Перейдите на вкладку 'Вход'.")
+                    
+                    st.success("✅ Аккаунт создан! Теперь войдите на вкладке 'Вход'.")
                 except Exception as e:
-                    st.error(f"Ошибка сохранения: {e}")
+                    st.error(f"Ошибка: {e}")
 
-    # Стоп
+    # ОСТАНОВКА (Не пускаем к боту без входа)
     if not st.session_state.get("authentication_status"):
         st.stop()
 # ==============================================================================
@@ -907,6 +892,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
