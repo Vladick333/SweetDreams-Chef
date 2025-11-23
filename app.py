@@ -39,102 +39,101 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (ОТКРЫТЫЙ ДОСТУП + ВХОД В МЕНЮ)
+# 1.2. АВТОРИЗАЦИЯ (БЕЗ ФАЙЛА CONFIG.YAML)
 # ==============================================================================
-try:
-    with open('config.yaml') as file:
-        config = yaml.load(file, Loader=SafeLoader)
-except FileNotFoundError:
-    st.error("⚠️ Файл config.yaml не найден!")
-    # Не останавливаем приложение, даем работать как гость
-    config = {'credentials': {'usernames': {}}} 
+import streamlit_authenticator as stauth
 
-# Инициализация
+# 1. НАСТРОЙКИ (ПИШЕМ ПРЯМО В КОДЕ)
+if 'auth_config' not in st.session_state:
+    # Хеш пароля "123"
+    hashed_pass = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
+    
+    st.session_state.auth_config = {
+        'credentials': {
+            'usernames': {
+                'admin': { 
+                    'name': 'Владыка',
+                    'password': hashed_pass, 
+                    'email': 'admin@gmail.com',
+                }
+            }
+        },
+        'cookie': {
+            'name': 'vladyka_ai_cookie',
+            'key': 'random_signature_key',
+            'expiry_days': 1
+        },
+        'theme': {
+            'login': {
+                'username': 'Логин',
+                'password': 'Пароль',
+                'button': 'Войти',
+                'title': 'Авторизация'
+            }
+        }
+    }
+
+# 2. ИНИЦИАЛИЗАЦИЯ
 authenticator = stauth.Authenticate(
-    config['credentials'],
-    config['cookie']['name'],
-    config['cookie']['key'],
-    config['cookie']['expiry_days']
+    st.session_state.auth_config['credentials'],
+    st.session_state.auth_config['cookie']['name'],
+    st.session_state.auth_config['cookie']['key'],
+    st.session_state.auth_config['cookie']['expiry_days']
 )
 
-# --- ПРОВЕРКА СТАТУСА ---
-if st.session_state.get("authentication_status"):
-    # === ЕСЛИ ПОЛЬЗОВАТЕЛЬ ВОШЕЛ ===
-    st.session_state.user_email = st.session_state["username"]
+# 3. ОТРИСОВКА В САЙДБАРЕ
+with st.sidebar:
+    # Если пользователь уже вошел
+    if st.session_state.get("authentication_status"):
+        st.success(f"👤 Вы вошли как: **{st.session_state['name']}**")
+        authenticator.logout('Выйти', 'main')
+        st.session_state.user_email = st.session_state["username"]
     
-    with st.sidebar:
-        # Красивая плашка с именем
-        user_data = config['credentials']['usernames'].get(st.session_state["username"], {})
-        user_name = user_data.get('name', st.session_state["username"])
+    # Если не вошел
+    else:
+        st.info("👀 Режим Гостя")
         
-        st.success(f"👤 Вы вошли как: **{user_name}**")
+        # Меню входа/регистрации
+        choice = st.radio("Меню:", ["Вход", "Регистрация"], horizontal=True, label_visibility="collapsed")
         
-        if st.button("Выйти", key="logout_btn", use_container_width=True):
-            st.session_state["authentication_status"] = None
-            st.session_state["username"] = None
-            st.rerun()
+        if choice == "Вход":
+            name, authentication_status, username = authenticator.login('main')
             
-else:
-    # === ЕСЛИ НЕ ВОШЕЛ (РЕЖИМ ГОСТЯ) ===
-    st.session_state.user_email = "Гость" # Пускаем как гостя
-    
-    with st.sidebar:
-        # Показываем формы входа прямо в меню, но аккуратно
-        st.info("👀 Вы в режиме **Гостя**")
-        
-        with st.expander("🔐 Вход / Регистрация", expanded=False):
-            tab_login, tab_reg = st.tabs(["Вход", "Создать"])
-
-            # 1. ФОРМА ВХОДА
-            with tab_login:
-                with st.form("LoginForm"):
-                    login_email = st.text_input("Почта", key="l_mail")
-                    login_pass = st.text_input("Пароль", type="password", key="l_pass")
-                    btn_login = st.form_submit_button("Войти")
-
-                if btn_login:
-                    if login_email in config['credentials']['usernames']:
-                        stored_hash = config['credentials']['usernames'][login_email]['password']
-                        if bcrypt.checkpw(login_pass.encode('utf-8'), stored_hash.encode('utf-8')):
-                            st.session_state["authentication_status"] = True
-                            st.session_state["username"] = login_email
-                            st.session_state["name"] = config['credentials']['usernames'][login_email]['name']
-                            st.toast("✅ Рады видеть вас снова!")
-                            st.rerun()
-                        else:
-                            st.error("Неверный пароль")
-                    else:
-                        st.error("Нет такого пользователя")
-
-            # 2. ФОРМА РЕГИСТРАЦИИ
-            with tab_reg:
-                with st.form("RegForm"):
-                    new_email = st.text_input("Почта", key="r_mail")
-                    new_pass = st.text_input("Пароль", type="password", key="r_pass")
-                    btn_reg = st.form_submit_button("Создать")
-
-                if btn_reg:
-                    if new_email in config['credentials']['usernames']:
-                        st.error("Уже занято!")
-                    elif not new_email or not new_pass:
-                        st.error("Заполните поля")
-                    else:
+            if authentication_status is False:
+                st.error('Неверный логин или пароль')
+            elif authentication_status is None:
+                st.warning('Введите данные')
+                
+        else: # РЕГИСТРАЦИЯ (ВРЕМЕННАЯ)
+            with st.form("RegForm"):
+                st.write("**Создать аккаунт**")
+                new_user = st.text_input("Логин")
+                new_name = st.text_input("Имя")
+                new_pass = st.text_input("Пароль", type="password")
+                submitted = st.form_submit_button("Зарегистрироваться")
+                
+                if submitted:
+                    if new_user and new_pass:
                         try:
-                            hashed_bytes = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt())
-                            hashed_str = hashed_bytes.decode('utf-8')
-                            
-                            config['credentials']['usernames'][new_email] = {
-                                'name': new_email, 'email': new_email,
-                                'password': hashed_str,
-                                'failed_login_attempts': 0, 'logged_in': False
+                            # Хешируем пароль
+                            hashed_pw = stauth.Hasher([new_pass]).generate()[0]
+                            # Сохраняем в память
+                            st.session_state.auth_config['credentials']['usernames'][new_user] = {
+                                'name': new_name,
+                                'password': hashed_pw,
+                                'email': f"{new_user}@mail.com"
                             }
-                            with open('config.yaml', 'w') as file:
-                                yaml.dump(config, file, default_flow_style=False)
-                            st.success("Готово! Теперь войдите.")
+                            # Обновляем аутентификатор
+                            authenticator.credentials = st.session_state.auth_config['credentials']
+                            st.success("Готово! Переключитесь на 'Вход'.")
                         except Exception as e:
                             st.error(f"Ошибка: {e}")
+                    else:
+                        st.error("Заполните поля!")
 
-# ВАЖНО: Мы убрали st.stop(), поэтому код идет дальше к Владыке AI
+# Если не вошел - пускаем как гостя
+if not st.session_state.get("authentication_status"):
+    st.session_state.user_email = "Гость"
 # ==============================================================================
 # 2. ЯДРО (API) - ИСПРАВЛЕНО ПОД РОТАЦИЮ
 # ==============================================================================
@@ -880,6 +879,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
