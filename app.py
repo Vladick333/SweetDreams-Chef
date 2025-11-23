@@ -746,24 +746,49 @@ def scroll_to_end(delay=100):
     components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
-# !!! КНОПКА ВХОДА С JS !!!
-# Она нажимает на кнопку открытия сайдбара (svg-иконка стрелочки)
-st.markdown("""
-<script>
-    function openSidebar() {
-        const sidebarButton = window.parent.document.querySelector('button[kind="header"]');
-        if (sidebarButton) {
-            sidebarButton.click();
+# =====================================================
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ОТКРЫВАЕТ МЕНЮ + ИСЧЕЗАЕТ) !!!
+# =====================================================
+# Показываем кнопку, ТОЛЬКО если пользователь НЕ вошел
+if not st.session_state.get("authentication_status"):
+    st.markdown("""
+    <style>
+        /* Стили для кнопки, чтобы она висела в углу */
+        .login-float-container {
+            position: fixed;
+            top: 60px; /* Чуть ниже, чтобы не перекрыть крестик */
+            right: 20px;
+            z-index: 999999;
         }
-    }
-</script>
-<div class="login-button">
-    <button onclick="window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl]').click()">
-        <span class="google-icon" style="font-weight:bold;">V</span> Войти
-    </button>
-</div>
-""", unsafe_allow_html=True)
+        .login-float-btn {
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: background 0.3s;
+        }
+        .login-float-btn:hover {
+            background-color: #3367D6;
+        }
+    </style>
 
+    <div class="login-float-container">
+        <button class="login-float-btn" onclick="
+            // Ищем кнопку открытия сайдбара (стрелочку) и нажимаем её
+            const btn = window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl]');
+            if (btn) { 
+                btn.click(); 
+            }
+        ">
+            V Войти
+        </button>
+    </div>
+    """, unsafe_allow_html=True)
 
 # --- САЙДБАР ---
 with st.sidebar:
@@ -908,6 +933,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
