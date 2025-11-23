@@ -765,24 +765,23 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИНАЛЬНАЯ АГРЕССИВНАЯ ФИКСАЦИЯ) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (МАКСИМАЛЬНАЯ ФИКСАЦИЯ) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. CSS: Нацеливаемся на родительский блок и саму кнопку
+    # 1. CSS: Крепим кнопку справа сверху (ОЧЕНЬ АГРЕССИВНЫЙ CSS)
     st.markdown("""
     <style>
-    /* Это самый агрессивный селектор для фиксации в Streamlit */
+    /* 1. Нацеливаемся на родительский блок кнопки, чтобы зафиксировать его */
     div[data-testid="stVerticalBlock"] > div > div:nth-child(1) div[data-testid="stHorizontalBlock"] > div:last-child > div.stButton {
-        position: fixed !important;
-        top: 100px !important; /* Удобная высота */
-        right: 20px !important; /* Анкер справа */
-        left: unset !important; /* Сбрасываем крепление к левому краю */
-        z-index: 99999999 !important; /* Максимальный приоритет */
-        width: auto !important;
+        /* ЭТО ДОЛЖНО РЕШИТЬ ПРОБЛЕМУ С ПРОКРУТКОЙ: */
+        position: fixed !important; 
+        top: 100px !important; /* Фиксируем на удобной высоте */
+        right: 20px !important;
+        z-index: 99999999 !important; /* МАКСИМАЛЬНЫЙ ПРИОРИТЕТ */
     }
     
-    /* Стили кнопки */
+    /* 2. Нацеливаемся на саму кнопку для стилей */
     div.stButton > button[kind="primary"] {
         background-color: #4285F4 !important;
         color: white !important;
@@ -790,7 +789,9 @@ if not st.session_state.get("authentication_status"):
         padding: 0.5rem 1.2rem !important;
         font-weight: bold !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+        /* Убираем конфликты трансформации */
         transform: none !important;
+        width: auto !important;
     }
     div.stButton > button[kind="primary"]:hover {
         background-color: #357ae8 !important;
@@ -802,17 +803,22 @@ if not st.session_state.get("authentication_status"):
     # 2. Кнопка (При нажатии устанавливает флаги и вызывает JS)
     if st.button("V Войти", key="float_login_btn", type="primary"):
         
-        # Устанавливаем флаги
+        # 1. Устанавливаем флаги Python
         st.session_state['force_open_login'] = True
         st.session_state['show_login_toast_flag'] = True
         
-        # АГРЕССИВНЫЙ JS для открытия меню
+        # 2. АГРЕССИВНЫЙ JS для открытия меню
         components.html("""
         <script>
-            window.parent.postMessage({type: "streamlit:setSidebarState", collapsed: false}, "*");
+            // Метод 1: Отправляем сигнал Streamlit
+            window.parent.postMessage({
+                type: "streamlit:setSidebarState",
+                collapsed: false
+            }, "*");
         </script>
         """, height=0, width=0)
         
+        # 3. Перезагружаем
         st.rerun()
 # --- САЙДБАР ---
 with st.sidebar:
@@ -953,6 +959,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
