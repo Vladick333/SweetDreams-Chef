@@ -757,7 +757,7 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! КНОПКА ВХОДА (ФИНАЛ: СТАБИЛЬНЫЙ TOAST) !!!
+# !!! БЛОК 2: ПЛАВАЮЩАЯ КНОПКА (С ФЛАГОМ) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
@@ -766,8 +766,8 @@ if not st.session_state.get("authentication_status"):
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 90px !important; /* Устанавливаем комфортную высоту */
-        right: 15px !important;
+        top: 100px !important; /* Удобная позиция */
+        right: 20px !important;
         z-index: 99999 !important;
         background-color: #4285F4 !important;
         color: white !important;
@@ -785,14 +785,20 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка (При нажатии устанавливает флаг и показывает Toast)
+    # 2. Кнопка (При нажатии устанавливает флаг)
     if st.button("V Войти", key="float_login_btn", type="primary"):
         
-        # Устанавливаем флаг, чтобы раскрыть Expander в сайдбаре
+        # Устанавливаем флаги
         st.session_state['force_open_login'] = True
+        st.session_state['show_login_toast_flag'] = True # <-- Активируем Toast (который сработает после перезагрузки)
         
-        # 3. ГАРАНТИРОВАННО ПОКАЗЫВАЕМ ПОДСКАЗКУ (~4 секунды)
-        st.toast("⬅ Нажмите на стрелочку меню слева для входа", icon="👉")
+        # 3. Пытаемся открыть меню (JS Best Effort)
+        components.html("""
+        <script>
+            const sidebarArrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (sidebarArrow) { sidebarArrow.click(); }
+        </script>
+        """, height=0, width=0)
         
         # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
         st.rerun()
@@ -936,6 +942,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
