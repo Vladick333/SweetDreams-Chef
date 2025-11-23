@@ -31,7 +31,7 @@ try:
     # Получаем данные из секретов
     raw_keys = st.secrets["GEMINI_API_KEY"]
     
-    # Превращаем всё в список API_KEYS_POOL
+    # Превращаем всё в список API_KEYS_POOL, чтобы ai_engine мог брать оттуда случайный
     if isinstance(raw_keys, str):
         API_KEYS_POOL = [raw_keys] # Если там строка -> делаем список из 1 элемента
     else:
@@ -60,8 +60,8 @@ authenticator = stauth.Authenticate(
     config['cookie']['expiry_days']
 )
 
-# Рисуем окно входа (Добавлены аргументы 'Вход' и 'main')
-authenticator.login('Вход', 'main')
+# Рисуем окно входа (ИСПРАВЛЕНО: убрано лишнее слово 'Вход')
+authenticator.login(location='main')
 
 # ПРОВЕРКА: ПУСКАТЬ ИЛИ НЕТ?
 if st.session_state["authentication_status"] is False:
@@ -820,6 +820,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
