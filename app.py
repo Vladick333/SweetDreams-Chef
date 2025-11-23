@@ -69,10 +69,17 @@ else:
     # Две вкладки
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-    # 1. ВХОД (Стандартный виджет, он удобный)
+    # 1. ВХОД (Стандартный виджет, переведенный на русский)
     with tab_login:
         try:
-            authenticator.login(location='main')
+            authenticator.login(
+                location='main',
+                fields={
+                    'username': 'Электронная почта',
+                    'password': 'Пароль',
+                    'login': 'Войти'
+                }
+            )
         except Exception as e:
             st.error(e)
             
@@ -873,6 +880,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
