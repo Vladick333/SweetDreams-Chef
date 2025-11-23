@@ -660,201 +660,203 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС
+# 5. ИНТЕРФЕЙС (УМНАЯ ПАМЯТЬ: ФАЙЛ ТОЛЬКО ДЛЯ ЗАРЕГИСТРИРОВАННЫХ)
 # ==============================================================================
-# --- ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ---
+import json
+import os
+
+# --- ФУНКЦИИ ПАМЯТИ ---
+def get_history_filename():
+    # Имя файла привязано к логину
+    username = st.session_state.get("username", "guest")
+    safe_name = "".join([c for c in username if c.isalnum() or c in (' ', '_', '-')]).strip()
+    return f"history_{safe_name}.json"
+
+def load_history():
+    # 1. ПРОВЕРКА: Если это Гость — не загружаем ничего из файлов!
+    if not st.session_state.get("authentication_status"):
+        return [] 
+
+    # 2. Если пользователь вошел — ищем его личный файл
+    filename = get_history_filename()
+    if os.path.exists(filename):
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_history():
+    # 1. ПРОВЕРКА: Если это Гость — НЕ сохраняем в файл! (Только память браузера)
+    if not st.session_state.get("authentication_status"):
+        return 
+
+    # 2. Если пользователь вошел — пишем на диск
+    filename = get_history_filename()
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(st.session_state.chats, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Ошибка сохранения: {e}")
+
+# --- ИНИЦИАЛИЗАЦИЯ ПРИ ЗАПУСКЕ ---
+# Проверяем смену пользователя (Гость -> Админ или наоборот)
+if 'last_logged_user' not in st.session_state:
+    st.session_state.last_logged_user = st.session_state.get("username", "guest")
+
+current_user = st.session_state.get("username", "guest")
+
+# Если пользователь сменился, перезагружаем историю под него
+if current_user != st.session_state.last_logged_user:
+    st.session_state.last_logged_user = current_user
+    st.session_state.chats = load_history() # Загружаем (или очищаем для гостя)
+    st.session_state.history = [] 
+    st.session_state.current_chat_id = None
+
+# Обычная инициализация
+if 'chats' not in st.session_state: 
+    st.session_state.chats = load_history()
+
 if 'history' not in st.session_state: st.session_state.history = []
-if 'chats' not in st.session_state: st.session_state.chats = []  # Архив чатов
-if 'current_chat_id' not in st.session_state: st.session_state.current_chat_id = None  # ID текущего
+if 'current_chat_id' not in st.session_state: st.session_state.current_chat_id = None
 if 'mode' not in st.session_state: st.session_state.mode = "AI"
 if 'vec' not in st.session_state: st.session_state.vec = [5] * len(FEATURES)
 if 'trigger_query' not in st.session_state: st.session_state.trigger_query = None
 
 
-# --- ФУНКЦИИ УПРАВЛЕНИЯ ЧАТАМИ ---
+# --- УПРАВЛЕНИЕ ЧАТАМИ ---
 def save_current_chat():
-    """Сохраняет текущую переписку в архив перед сменой чата"""
-    if not st.session_state.history:
-        return  # Не сохраняем пустые чаты
+    """Сохраняет чат в память (всегда) и на диск (если вошел)"""
+    if not st.session_state.history: return
 
-    # Генерируем название (первые 30 символов)
     title = "Новый диалог"
     for msg in st.session_state.history:
         if msg["role"] == "user":
             title = msg["content"][:25] + "..." if len(msg["content"]) > 25 else msg["content"]
             break
-
+            
     chat_data = {
         "title": title,
         "history": st.session_state.history,
         "mode": st.session_state.mode
     }
 
-    # Если мы в старом чате - обновляем его
     if st.session_state.current_chat_id is not None:
         if st.session_state.current_chat_id < len(st.session_state.chats):
             st.session_state.chats[st.session_state.current_chat_id] = chat_data
     else:
-        # Если это новый чат - добавляем в список
         st.session_state.chats.append(chat_data)
         st.session_state.current_chat_id = len(st.session_state.chats) - 1
-
+    
+    # Попытка сохранить на диск (функция сама проверит, можно ли)
+    save_history() 
 
 def create_new_chat():
-    """Начинает новый диалог, предварительно сохранив старый"""
-    save_current_chat()  # Сначала в архив
-    st.session_state.history = []  # Чистим экран
-    st.session_state.current_chat_id = None  # Сбрасываем ID (мы в новом)
-    # st.session_state.mode = "AI" # Можно сбросить режим на Ассистента, если хотите
-
+    save_current_chat()
+    st.session_state.history = []
+    st.session_state.current_chat_id = None
 
 def load_chat(index):
-    """Загружает чат из архива"""
-    save_current_chat()  # Сохраняем текущий перед уходом
+    save_current_chat()
     st.session_state.history = st.session_state.chats[index]["history"]
     st.session_state.mode = st.session_state.chats[index].get("mode", "AI")
     st.session_state.current_chat_id = index
 
-
 def clear_archives_only():
-    """Удаляет ТОЛЬКО историю (архив), но оставляет текущий экран чистым"""
-    st.session_state.chats = []  # Удаляем архив
-    st.session_state.current_chat_id = None  # Отвязываемся от ID
-    st.session_state.history = []  # Очищаем текущий экран для старта
+    st.session_state.chats = []
+    st.session_state.current_chat_id = None
+    
+    # Если пользователь вошел - удаляем его файл
+    if st.session_state.get("authentication_status"):
+        filename = get_history_filename()
+        if os.path.exists(filename):
+            os.remove(filename)
 
-
-# Функция для принудительного скролла
 def scroll_to_end(delay=100):
-    components.html(f"""
-        <script>
-            setTimeout(() => {{
-                const endChatElement = window.parent.document.getElementById('end-chat');
-                if (endChatElement) {{
-                    endChatElement.scrollIntoView({{behavior: "smooth", block: "end"}});
-                }}
-            }}, {delay}); 
-        </script>
-        """, height=0)
+    components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
-# !!! КНОПКА ВХОДА !!!
-st.markdown("""
-<div class="login-button">
-    <button onclick="window.parent.alert('Функционал входа через Google пока не реализован!')">
-        <span class="google-icon">G</span> Войти
-    </button>
-</div>
-""", unsafe_allow_html=True)
-
-# --- САЙДБАР (С ДОБРЯЧКОМ) ---
+# --- 4. САЙДБАР ---
 with st.sidebar:
     st.title("⚙️ МЕНЮ")
 
-    # 1. Большая кнопка НОВЫЙ ЧАТ
     if st.button("📝 НАЧАТЬ НОВЫЙ ЧАТ", use_container_width=True):
         create_new_chat()
         st.rerun()
 
     st.divider()
-
     st.write("### РЕЖИМ")
 
-    # 1. Определяем, где должна стоять точка (0=Ассистент, 1=Шеф, 2=Добрячок)
     current_idx = 0
-    if st.session_state.mode == "CHEF":
-        current_idx = 1
-    elif st.session_state.mode == "KIND":
-        current_idx = 2
-
-    # 2. Рисуем кнопку с тремя вариантами
+    if st.session_state.mode == "CHEF": current_idx = 1
+    elif st.session_state.mode == "KIND": current_idx = 2
+    
     selected_option = st.radio(
-        "",
-        ["Ассистент", "Шеф-Повар", "Добрячок"],  # <--- Добавили Добрячка
-        index=current_idx,
-        label_visibility="collapsed",
-        key="mode_radio_widget"
+        "", ["Ассистент", "Шеф-Повар", "Добрячок"], 
+        index=current_idx, label_visibility="collapsed", key="mode_radio_widget"
     )
 
-    # 3. Вычисляем, какой режим выбрал пользователь
-    target_mode = "AI"  # По умолчанию Ассистент
-    if selected_option == "Шеф-Повар":
-        target_mode = "CHEF"
-    elif selected_option == "Добрячок":
-        target_mode = "KIND"
-
-    # Если то, что на кнопке, отличается от того, что в мозгах бота:
+    target_mode = "AI"
+    if selected_option == "Шеф-Повар": target_mode = "CHEF"
+    elif selected_option == "Добрячок": target_mode = "KIND"
+    
     if target_mode != st.session_state.mode:
-        # 1. Меняем режим в памяти
         st.session_state.mode = target_mode
-        # 2. Сохраняем это состояние в текущий чат
         save_current_chat()
-
-        # Уведомление о смене (чтобы было видно, что сработало)
-        if target_mode == "CHEF":
-            st.toast("👨‍🍳 Режим: Ворчливый Шеф")
-        elif target_mode == "KIND":
-            st.toast("💛 Режим: Добрячок")
-        else:
-            st.toast("🤖 Режим: Ассистент")
-
-        # 3. ПРИНУДИТЕЛЬНО перезагружаем страницу
+        if target_mode == "CHEF": st.toast("👨‍🍳 Режим: Ворчливый Шеф")
+        elif target_mode == "KIND": st.toast("💛 Режим: Добрячок")
+        else: st.toast("🤖 Режим: Ассистент")
         st.rerun()
 
     st.divider()
 
-    # 2. СПИСОК ЧАТОВ
     st.write("### 🗂 АРХИВ")
+    
+    # ПОДСКАЗКА ДЛЯ ГОСТЯ
+    if not st.session_state.get("authentication_status"):
+        st.caption("⚠ Гостевой режим: история удалится при перезагрузке")
+        
     if not st.session_state.chats:
-        st.caption("Нет сохраненных диалогов")
-
-    # Выводим (новые сверху)
+        st.caption("Нет диалогов")
+    
     for i, chat in reversed(list(enumerate(st.session_state.chats))):
-        label = f"💬 {chat['title']}"
-        type_btn = "secondary"
-        if i == st.session_state.current_chat_id:
-            label = f"🟢 {chat['title']}"  # Визуально помечаем текущий
-            type_btn = "primary"  # Выделяем цветом
-
-        if st.button(label, key=f"chat_btn_{i}", use_container_width=True, type=type_btn):
+        label = f"🟢 {chat['title']}" if i == st.session_state.current_chat_id else f"💬 {chat['title']}"
+        btn_type = "primary" if i == st.session_state.current_chat_id else "secondary"
+        if st.button(label, key=f"chat_{i}", use_container_width=True, type=btn_type):
             load_chat(i)
             st.rerun()
 
     st.divider()
-
-    # 3. КНОПКА УДАЛИТЬ АРХИВ
     if st.button("🗑 УДАЛИТЬ ИСТОРИЮ", use_container_width=True):
         clear_archives_only()
         st.rerun()
-# --- ТАБЫ ---
+
+
+# --- 5. ОСНОВНОЙ ЭКРАН ---
 t1, t2, t3 = st.tabs(["💬 ЧАТ", "🎛 ВКУСЫ", "📂 БАЗА"])
 
-# --- ЧАТ ---
 with t1:
-    st.markdown(
-        "<h1 style='text-align: center; margin-bottom: 30px;'>Vladыка <span style='color:#00E5FF'>AI</span></h1>",
-        unsafe_allow_html=True)
-
-
-    # --- МОБИЛЬНАЯ АДАПТАЦИЯ КНОПОК (2x2) ---
-    # Вместо 4 колонок делаем 2 ряда по 2 колонки
+    st.markdown("<h1 style='text-align: center; margin-bottom: 30px;'>Vladыка <span style='color:#00E5FF'>AI</span></h1>", unsafe_allow_html=True)
 
     def set_query(q):
         st.session_state.history.append({"role": "user", "content": q})
         st.session_state.trigger_rerun = True
 
+    r1c1, r1c2 = st.columns(2)
+    with r1c1: st.button("🎲 СЛУЧАЙНЫЙ ФАКТ", on_click=set_query, args=(random.choice(RANDOM_FACTS),), use_container_width=True)
+    with r1c2: st.button("📜 РАНДОМ РЕЦЕПТ", on_click=set_query, args=(random.choice(RANDOM_RECIPES),), use_container_width=True)
+    
+    st.write("") 
+    r2c1, r2c2 = st.columns(2)
+    with r2c1: st.button("🍷 СОЧЕТАНИЯ", on_click=set_query, args=(random.choice(RANDOM_PAIRINGS),), use_container_width=True)
+    with r2c2: st.button("💡 СОВЕТ", on_click=set_query, args=(random.choice(RANDOM_TIPS),), use_container_width=True)
 
-    # Первый ряд кнопок
-    row1_1, row1_2 = st.columns(2)
-    row1_1.button("🎲 СЛУЧАЙНЫЙ ФАКТ", on_click=set_query, args=(random.choice(RANDOM_FACTS),), use_container_width=True)
-    row1_2.button("📜 РАНДОМ РЕЦЕПТ", on_click=set_query, args=(random.choice(RANDOM_RECIPES),),
-                  use_container_width=True)
+    if st.session_state.trigger_query:
+        st.session_state.history.append({"role": "user", "content": st.session_state.trigger_query})
+        st.session_state.trigger_query = None
+        st.rerun()
 
-    # Второй ряд кнопок
-    row2_1, row2_2 = st.columns(2)
-    row2_1.button("🍷 СОЧЕТАНИЯ", on_click=set_query, args=(random.choice(RANDOM_PAIRINGS),), use_container_width=True)
-    row2_2.button("💡 ПОЛЕЗНЫЙ СОВЕТ", on_click=set_query, args=(random.choice(RANDOM_TIPS),), use_container_width=True)
-
-    # Логика перезагрузки после кнопок
     if 'trigger_rerun' in st.session_state and st.session_state.trigger_rerun:
         st.session_state.trigger_rerun = False
         scroll_to_end(delay=10)
@@ -862,49 +864,35 @@ with t1:
 
     st.write("")
 
-    # Вывод сообщений
     for msg in st.session_state.history:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Якорь для скролла
     st.markdown("<div id='end-chat'></div>", unsafe_allow_html=True)
 
-    # --- ЛОГИКА ВВОДА И ОТВЕТА ---
-    prompt = None
-
-    if input_val := st.chat_input("Введите сообщение..."):
-        prompt = input_val
+    if prompt := st.chat_input("Введите сообщение..."):
         st.session_state.history.append({"role": "user", "content": prompt})
         st.rerun()
 
     if st.session_state.history and st.session_state.history[-1]["role"] == "user":
         scroll_to_end(delay=10)
-
         with st.chat_message("assistant"):
             placeholder = st.empty()
             placeholder.markdown("""<div class="thinking-pulse">⚡ ГЕНЕРАЦИЯ ОТВЕТА...</div>""", unsafe_allow_html=True)
-
-            last_user_msg = st.session_state.history[-1]["content"]
-            current_mode = st.session_state.mode
-
-            # Генерируем ответ
-            resp = ai_engine(st.session_state.history[:-1], last_user_msg, current_mode)
+            
+            resp = ai_engine(st.session_state.history[:-1], st.session_state.history[-1]["content"], st.session_state.mode)
+            
             placeholder.empty()
             st.markdown(resp)
-
+        
         st.session_state.history.append({"role": "assistant", "content": resp})
-
-        # АВТОСОХРАНЕНИЕ
-        save_current_chat()
-
+        save_current_chat() 
         scroll_to_end(delay=300)
 
-# --- ВЕКТОРЫ (БЕЗ ИЗМЕНЕНИЙ) ---
+
 with t2:
     st.header("🧬 ПОДБОР ВКУСА")
     c_sl, c_res = st.columns([1, 1.5])
-
     if 'vec' not in st.session_state or len(st.session_state.vec) != len(FEATURES):
         st.session_state.vec = [5] * len(FEATURES)
 
@@ -920,28 +908,20 @@ with t2:
         res = []
         for d in DB:
             diff = sum([abs(a - b) for a, b in zip(new_vec, d['scores'])])
-            max_diff = len(FEATURES) * 10
-            score = max(0, int((1 - diff / max_diff) * 100))
+            score = max(0, int((1 - diff / (len(FEATURES)*10)) * 100))
             res.append((d, score))
-
         res.sort(key=lambda x: x[1], reverse=True)
 
         for item, sc in res[:4]:
             color = "#00E5FF" if sc > 80 else "#aaa"
             st.markdown(f"""
             <div class="glass-card" style="border-left: 5px solid {color}">
-                <div style="display:flex; justify-content:space-between;">
-                    <h3 style="margin:0">{item['name']}</h3>
-                    <h2 style="margin:0; color:{color}">{sc}%</h2>
-                </div>
+                <div style="display:flex; justify-content:space-between;"><h3 style="margin:0">{item['name']}</h3><h2 style="margin:0; color:{color}">{sc}%</h2></div>
                 <p>{item['desc']}</p>
-                <div style="background:#333; height:8px; width:100%; border-radius:4px; margin-top:10px;">
-                    <div style="background: linear-gradient(90deg, #00E5FF, #2979FF); width:{sc}%; height:100%; border-radius:4px;"></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+                <div style="background:#333; height:8px; width:100%; border-radius:4px; margin-top:10px;"><div style="background: linear-gradient(90deg, #00E5FF, #2979FF); width:{sc}%; height:100%; border-radius:4px;"></div></div>
+            </div>""", unsafe_allow_html=True)
 
-# --- БАЗА (БЕЗ ИЗМЕНЕНИЙ) ---
+
 with t3:
     st.header("📂 БАЗА ДАННЫХ")
     df = pd.DataFrame(DB)
