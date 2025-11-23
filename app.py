@@ -71,7 +71,7 @@ if st.session_state.get("authentication_status"):
 else:
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-    # 1. ВХОД (С ПЕРЕВОДОМ)
+   # 1. ВХОД (ПЕРЕВЕДЕН НА РУССКИЙ)
     with tab_login:
         try:
             authenticator.login(
@@ -89,7 +89,6 @@ else:
             st.error('❌ Неверная почта или пароль')
         elif st.session_state["authentication_status"] is None:
             st.warning('Введите данные для входа')
-
     # 2. РЕГИСТРАЦИЯ (С ПРЯМЫМ ШИФРОВАНИЕМ ЧЕРЕЗ BCRYPT)
     with tab_reg:
         with st.form("Registration_Form"):
@@ -878,6 +877,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
