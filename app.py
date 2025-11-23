@@ -71,11 +71,12 @@ if st.session_state.get("authentication_status"):
 else:
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-   # 1. ВХОД (ПЕРЕВЕДЕН НА РУССКИЙ)
+   # 1. ВХОД (ВОТ ЗДЕСЬ МЫ МЕНЯЕМ НАЗВАНИЯ!)
     with tab_login:
         try:
             authenticator.login(
                 location='main',
+                # !!! ВОТ ЭТОТ БЛОК ДЕЛАЕТ РУССКИЙ ЯЗЫК !!!
                 fields={
                     'username': 'Электронная почта',
                     'password': 'Пароль',
@@ -877,6 +878,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
