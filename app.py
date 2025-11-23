@@ -39,14 +39,13 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (ПОЛНОСТЬЮ НА РУССКОМ + ГОЛУБЫЕ ЗАГОЛОВКИ)
+# 1.2. АВТОРИЗАЦИЯ (КРАСИВЫЙ ДИЗАЙН В СТИЛЕ ПРИЛОЖЕНИЯ)
 # ==============================================================================
 import streamlit_authenticator as stauth
-import bcrypt # Нужен для проверки пароля вручную
+import bcrypt 
 
-# 1. НАСТРОЙКИ (БАЗА ПОЛЬЗОВАТЕЛЕЙ В ПАМЯТИ)
+# 1. НАСТРОЙКИ
 if 'auth_config' not in st.session_state:
-    # Хеш пароля "123"
     hashed_pass = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
     
     st.session_state.auth_config = {
@@ -61,8 +60,7 @@ if 'auth_config' not in st.session_state:
         }
     }
 
-# --- СТИЛЬ ЗАГОЛОВКОВ (ГОЛУБОЙ, КАК ВЫ ПРОСИЛИ) ---
-# Мы используем HTML, чтобы сделать красиво
+# --- ФУНКЦИЯ ДЛЯ КРАСИВЫХ ЗАГОЛОВКОВ ---
 def custom_header(text):
     st.markdown(f"""
     <h2 style="
@@ -78,27 +76,48 @@ def custom_header(text):
 
 # 3. ОТРИСОВКА В САЙДБАРЕ
 with st.sidebar:
-    # Если пользователь уже вошел
+    # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ВОШЕЛ
     if st.session_state.get("authentication_status"):
-        st.success(f"👤 Привет, **{st.session_state['name']}**!")
+        # === ВОТ ЗДЕСЬ МЫ ДЕЛАЕМ КРАСИВУЮ КАРТОЧКУ ===
+        user_name = st.session_state['name']
+        st.markdown(f"""
+        <div style="
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 229, 255, 0.3); /* Голубая рамка */
+            background: rgba(0, 229, 255, 0.05); /* Полупрозрачный фон */
+            color: #ffffff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        ">
+            <div style="font-size: 28px;">👤</div>
+            <div style="line-height: 1.2;">
+                <div style="font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 600;">ВЫ ВОШЛИ КАК</div>
+                <div style="font-size: 18px; font-weight: 800; color: #00E5FF; letter-spacing: 0.5px;">{user_name}</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        # =============================================
+
         if st.button("Выйти", use_container_width=True):
             st.session_state["authentication_status"] = None
             st.session_state["username"] = None
             st.rerun()
         st.session_state.user_email = st.session_state["username"]
     
-    # Если не вошел
+    # ЕСЛИ НЕ ВОШЕЛ
     else:
         st.info("👀 Вы в режиме **Гостя**")
         
         with st.expander("🔐 Вход / Регистрация", expanded=True):
             tab_login, tab_reg = st.tabs(["Вход", "Создать"])
 
-            # --- ВКЛАДКА 1: ВХОД (РУЧНАЯ, ЧТОБЫ БЫЛО НА РУССКОМ) ---
+            # --- ВХОД ---
             with tab_login:
-                # Голубой заголовок
                 custom_header("Вход в систему")
-                
                 with st.form("LoginForm"):
                     login_user = st.text_input("Почта")
                     login_pass = st.text_input("Пароль", type="password")
@@ -107,9 +126,7 @@ with st.sidebar:
                 if btn_login:
                     users = st.session_state.auth_config['credentials']['usernames']
                     if login_user in users:
-                        # Проверяем пароль
                         stored_hash = users[login_user]['password']
-                        # Если пароль верный
                         if bcrypt.checkpw(login_pass.encode('utf-8'), stored_hash.encode('utf-8')):
                             st.session_state["authentication_status"] = True
                             st.session_state["username"] = login_user
@@ -121,17 +138,14 @@ with st.sidebar:
                     else:
                         st.error("Пользователь не найден")
 
-            # --- ВКЛАДКА 2: РЕГИСТРАЦИЯ (РУЧНАЯ) ---
+            # --- РЕГИСТРАЦИЯ ---
             with tab_reg:
-                # Голубой заголовок (Красивый, как Login)
                 custom_header("Новый пользователь")
-                
                 with st.form("RegForm"):
-                    new_user = st.text_input("Введите Почту")
+                    new_user = st.text_input("Придумайте Почту")
                     new_name = st.text_input("Ваше Имя")
                     new_pass = st.text_input("Пароль", type="password")
                     rep_pass = st.text_input("Повторите пароль", type="password")
-                    
                     btn_reg = st.form_submit_button("Зарегистрироваться", use_container_width=True)
                     
                     if btn_reg:
@@ -143,10 +157,7 @@ with st.sidebar:
                             st.error("Такая почта уже есть!")
                         else:
                             try:
-                                # Хешируем пароль (создаем защиту)
                                 hashed_pw = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-                                
-                                # Сохраняем в базу
                                 st.session_state.auth_config['credentials']['usernames'][new_user] = {
                                     'name': new_name,
                                     'password': hashed_pw,
@@ -904,6 +915,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
