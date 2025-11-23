@@ -105,6 +105,12 @@ def inject_css():
             transition: all 0.1s ease-in-out !important;
             transform: none !important; /* УБРАНО SCALE */
         }
+        /* === ВОТ ЭТИ СТРОЧКИ НУЖНЫ ДЛЯ АЙФОНА И XIAOMI === */
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            /* ================================================ */
+        }
 
         /* Стиль первой кнопки (как на скриншоте) */
         .main .stButton:nth-child(1) button {
@@ -730,6 +736,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
