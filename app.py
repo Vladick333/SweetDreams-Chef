@@ -39,24 +39,52 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (КРАСИВЫЙ ДИЗАЙН В СТИЛЕ ПРИЛОЖЕНИЯ)
+# 1.2. АВТОРИЗАЦИЯ (КРАСИВЫЙ ДИЗАЙН + ВЕЧНАЯ ПАМЯТЬ В ФАЙЛЕ)
 # ==============================================================================
 import streamlit_authenticator as stauth
 import bcrypt 
+import json
+import os
 
-# 1. НАСТРОЙКИ
+# --- ФАЙЛ БАЗЫ ПОЛЬЗОВАТЕЛЕЙ ---
+USERS_FILE = "users.json"
+
+# Загрузка пользователей с диска
+def load_users():
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except: return {}
+    return {}
+
+# Сохранение пользователей на диск
+def save_users(users_data):
+    try:
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(users_data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Ошибка сохранения юзеров: {e}")
+
+
+# 1. НАСТРОЙКИ (ЗАГРУЖАЕМ ПРИ СТАРТЕ)
 if 'auth_config' not in st.session_state:
     hashed_pass = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
     
+    # 1. Грузим из файла
+    saved_users = load_users()
+    
+    # 2. Добавляем Админа (если его нет в файле)
+    if 'admin' not in saved_users:
+        saved_users['admin'] = { 
+            'name': 'Владыка',
+            'password': hashed_pass, 
+            'email': 'admin@gmail.com',
+        }
+    
     st.session_state.auth_config = {
         'credentials': {
-            'usernames': {
-                'admin': { 
-                    'name': 'Владыка',
-                    'password': hashed_pass, 
-                    'email': 'admin@gmail.com',
-                }
-            }
+            'usernames': saved_users
         }
     }
 
@@ -78,14 +106,13 @@ def custom_header(text):
 with st.sidebar:
     # ЕСЛИ ПОЛЬЗОВАТЕЛЬ ВОШЕЛ
     if st.session_state.get("authentication_status"):
-        # === ВОТ ЗДЕСЬ МЫ ДЕЛАЕМ КРАСИВУЮ КАРТОЧКУ ===
         user_name = st.session_state['name']
         st.markdown(f"""
         <div style="
             padding: 15px;
             border-radius: 12px;
-            border: 1px solid rgba(0, 229, 255, 0.3); /* Голубая рамка */
-            background: rgba(0, 229, 255, 0.05); /* Полупрозрачный фон */
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            background: rgba(0, 229, 255, 0.05);
             color: #ffffff;
             margin-bottom: 15px;
             display: flex;
@@ -100,7 +127,6 @@ with st.sidebar:
             </div>
         </div>
         """, unsafe_allow_html=True)
-        # =============================================
 
         if st.button("Выйти", use_container_width=True):
             st.session_state["authentication_status"] = None
@@ -138,7 +164,7 @@ with st.sidebar:
                     else:
                         st.error("Пользователь не найден")
 
-            # --- РЕГИСТРАЦИЯ ---
+            # --- РЕГИСТРАЦИЯ (С СОХРАНЕНИЕМ В ФАЙЛ) ---
             with tab_reg:
                 custom_header("Новый пользователь")
                 with st.form("RegForm"):
@@ -158,11 +184,17 @@ with st.sidebar:
                         else:
                             try:
                                 hashed_pw = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                                
+                                # 1. Сохраняем в память
                                 st.session_state.auth_config['credentials']['usernames'][new_user] = {
                                     'name': new_name,
                                     'password': hashed_pw,
                                     'email': new_user
                                 }
+                                
+                                # 2. СОХРАНЯЕМ В ФАЙЛ (ВЕЧНОСТЬ)
+                                save_users(st.session_state.auth_config['credentials']['usernames'])
+                                
                                 st.success("✅ Аккаунт создан! Теперь войдите.")
                             except Exception as e:
                                 st.error(f"Ошибка: {e}")
@@ -915,6 +947,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
