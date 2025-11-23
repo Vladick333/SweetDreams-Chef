@@ -16,6 +16,15 @@ from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
 import bcrypt # <--- ДОБАВИТЬ ЭТО К ОСТАЛЬНЫМ ИМПОРТАМ
 # ==========================================
+# ... (После всех импортов: import os, import bcrypt, etc.)
+
+# =================================================================
+# !!! БЛОК 0: ГАРАНТИРОВАННЫЙ TOAST (РАЗМЕСТИТЕ СВЕРХУ СКРИПТА) !!!
+# =================================================================
+if 'show_login_toast_flag' in st.session_state and st.session_state['show_login_toast_flag']:
+    st.toast("⬅ Нажмите на стрелочку меню слева для входа", icon="👉")
+    # Очищаем флаг, чтобы Toast не появлялся снова
+    del st.session_state['show_login_toast_flag']
 
 # ==============================================================================
 # 1. НАСТРОЙКИ СТРАНИЦЫ
@@ -942,6 +951,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
