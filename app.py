@@ -660,11 +660,11 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС (ФИНАЛ: УМНАЯ КНОПКА V + ВЕЧНАЯ ПАМЯТЬ + ТВОЙ ДИЗАЙН)
+# 5. ИНТЕРФЕЙС (РАБОЧАЯ КНОПКА V -> ОТКРЫВАЕТ МЕНЮ И ВХОД)
 # ==============================================================================
 import json
 import os
-import streamlit.components.v1 as components # Нужно для открытия меню
+import streamlit.components.v1 as components
 
 # --- ФУНКЦИИ ПАМЯТИ ---
 def get_history_filename():
@@ -747,16 +747,14 @@ def scroll_to_end(delay=100):
     components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
-# =================================================================
-# !!! НОВАЯ УМНАЯ КНОПКА "V ВОЙТИ" (ИСПРАВЛЕНО) !!!
-# =================================================================
-# Показываем, ТОЛЬКО если пользователь еще не вошел
+# =====================================================
+# !!! УМНАЯ КНОПКА ВХОДА (ОТКРЫВАЕТ МЕНЮ) !!!
+# =====================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. Стили для кнопки (закрепляем справа сверху)
+    # 1. CSS (Кнопка справа сверху)
     st.markdown("""
     <style>
-    /* Нацеливаемся на кнопку типа primary */
     div.stButton > button[kind="primary"] {
         position: fixed !important;
         top: 100px !important;
@@ -778,19 +776,20 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Сама кнопка (Python). Если нажать - выполнится код внутри.
+    # 2. Логика нажатия
     if st.button("V Войти", key="float_login_btn", type="primary"):
-        # 3. JS-скрипт, который ищет стрелочку меню и нажимает её
+        # А) Ставим флаг, что надо раскрыть форму входа
+        st.session_state['force_open_login'] = True
+        
+        # Б) Открываем сайдбар через JS (самый надежный метод postMessage)
         components.html("""
         <script>
-            const sidebarArrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-            if (sidebarArrow) {
-                sidebarArrow.click();
-            }
+            window.parent.postMessage({type: "streamlit:setSidebarState", collapsed: false}, "*");
         </script>
         """, height=0, width=0)
-        # 4. Подсказка (на случай, если браузер заблокирует JS)
-        st.toast("⬅ Меню открыто! Введите данные слева.")
+        
+        # В) Перезагружаем, чтобы применить открытие
+        st.rerun()
 
 
 # --- САЙДБАР ---
@@ -848,7 +847,7 @@ with t1:
         st.session_state.history.append({"role": "user", "content": q})
         st.session_state.trigger_rerun = True
 
-    # ТВОЙ ПРОВЕРЕННЫЙ ДИЗАЙН КНОПОК (2x2)
+    # Твой дизайн кнопок (2x2)
     col_grid = st.columns([1, 1]) 
     
     with col_grid[0]:
@@ -869,7 +868,7 @@ with t1:
         scroll_to_end(delay=10)
         st.rerun()
 
-    st.write("")
+    st.write("") 
 
     for msg in st.session_state.history:
         with st.chat_message(msg["role"]):
@@ -932,8 +931,6 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
-
-
 
 
 
