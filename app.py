@@ -8,7 +8,7 @@ import pandas as pd
 import google.generativeai as genai
 from datetime import datetime
 import uuid
-import random
+import random # <--- ВАЖНО: Проверь, что этот импорт есть!
 import streamlit.components.v1 as components
 
 # ==============================================================================
@@ -21,15 +21,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# !!! БЕЗОПАСНОЕ ЧТЕНИЕ КЛЮЧА API !!!
+# !!! БЕЗОПАСНОЕ ЧТЕНИЕ И СОЗДАНИЕ СПИСКА КЛЮЧЕЙ !!!
 try:
-    # Пытаемся получить ключ из переменной "GEMINI_API_KEY" из Streamlit Secrets
-    MY_API_KEY = st.secrets["GEMINI_API_KEY"] 
-except KeyError:
-    # Если ключ не найден (KeyError), присваиваем заглушку и показываем ошибку
-    MY_API_KEY = "PLACEHOLDER_KEY_REQUIRED_FOR_CLOUD_DEPLOYMENT" 
-    st.error("⚠️ Ошибка: Ключ GEMINI_API_KEY не найден в Secrets. Введите его в настройках Streamlit Cloud.")
+    # Получаем данные из секретов
+    raw_keys = st.secrets["GEMINI_API_KEY"]
+    
+    # Превращаем всё в список API_KEYS_POOL, чтобы ai_engine мог брать оттуда случайный
+    if isinstance(raw_keys, str):
+        API_KEYS_POOL = [raw_keys] # Если там строка -> делаем список из 1 элемента
+    else:
+        API_KEYS_POOL = raw_keys   # Если там уже список -> оставляем как есть
 
+except KeyError:
+    st.error("⚠️ Ошибка: Ключ GEMINI_API_KEY не найден в Secrets.")
+    API_KEYS_POOL = []
 
 # ==============================================================================
 # 2. ЯДРО (API)
@@ -723,6 +728,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
