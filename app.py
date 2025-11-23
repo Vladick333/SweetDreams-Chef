@@ -660,10 +660,11 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС (ФИНАЛЬНЫЙ: ИДЕАЛЬНЫЙ ДИЗАЙН + КНОПКА ВХОДА)
+# 5. ИНТЕРФЕЙС (ФИНАЛ: УМНАЯ КНОПКА V + ВЕЧНАЯ ПАМЯТЬ + ТВОЙ ДИЗАЙН)
 # ==============================================================================
 import json
 import os
+import streamlit.components.v1 as components # Нужно для открытия меню
 
 # --- ФУНКЦИИ ПАМЯТИ ---
 def get_history_filename():
@@ -746,58 +747,51 @@ def scroll_to_end(delay=100):
     components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
-# =====================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (FIX: НИЖЕ И НАДЕЖНЕЕ) !!!
-# =====================================================
+# =================================================================
+# !!! НОВАЯ УМНАЯ КНОПКА "V ВОЙТИ" (ИСПРАВЛЕНО) !!!
+# =================================================================
+# Показываем, ТОЛЬКО если пользователь еще не вошел
 if not st.session_state.get("authentication_status"):
+    
+    # 1. Стили для кнопки (закрепляем справа сверху)
     st.markdown("""
     <style>
-        .login-float-container {
-            position: fixed;
-            top: 100px !important; /* ОПУСТИЛ НИЖЕ (было 60) */
-            right: 20px;
-            z-index: 999999;
-        }
-        .login-float-btn {
-            background-color: #4285F4;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-family: sans-serif;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: background 0.3s, transform 0.1s;
-        }
-        .login-float-btn:hover {
-            background-color: #3367D6;
-            transform: scale(1.05);
-        }
-        .login-float-btn:active {
-            transform: scale(0.95);
-        }
+    /* Нацеливаемся на кнопку типа primary */
+    div.stButton > button[kind="primary"] {
+        position: fixed !important;
+        top: 100px !important;
+        right: 20px !important;
+        z-index: 999999 !important;
+        background-color: #4285F4 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.5rem 1.2rem !important;
+        font-weight: bold !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
+        width: auto !important;
+    }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #357ae8 !important;
+        transform: scale(1.05) !important;
+    }
     </style>
-
-    <div class="login-float-container">
-        <button class="login-float-btn" onclick="
-            // 1. Пытаемся открыть меню программно
-            const sidebarBtn = window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl]');
-            if (sidebarBtn) { 
-                sidebarBtn.click(); 
-            } else {
-                // 2. Если не вышло (или меню уже открыто) - ничего страшного
-                console.log('Menu might be already open');
-            }
-        ">
-            V Войти
-        </button>
-    </div>
     """, unsafe_allow_html=True)
-    
-    # Добавляем невидимую кнопку Streamlit, чтобы ловить нажатие и давать подсказку,
-    # если JS не сработает (резервный вариант)
+
+    # 2. Сама кнопка (Python). Если нажать - выполнится код внутри.
+    if st.button("V Войти", key="float_login_btn", type="primary"):
+        # 3. JS-скрипт, который ищет стрелочку меню и нажимает её
+        components.html("""
+        <script>
+            const sidebarArrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (sidebarArrow) {
+                sidebarArrow.click();
+            }
+        </script>
+        """, height=0, width=0)
+        # 4. Подсказка (на случай, если браузер заблокирует JS)
+        st.toast("⬅ Меню открыто! Введите данные слева.")
+
 
 # --- САЙДБАР ---
 with st.sidebar:
@@ -854,21 +848,17 @@ with t1:
         st.session_state.history.append({"role": "user", "content": q})
         st.session_state.trigger_rerun = True
 
-    # --- ИСПРАВЛЕННЫЙ ДИЗАЙН КНОПОК (ПЛОТНАЯ СЕТКА) ---
-    # Используем columns внутри columns для контроля отступов
-    col_grid = st.columns([1, 1]) # 2 основные колонки
+    # ТВОЙ ПРОВЕРЕННЫЙ ДИЗАЙН КНОПОК (2x2)
+    col_grid = st.columns([1, 1]) 
     
     with col_grid[0]:
-        # Левая колонка: Кнопка 1 и Кнопка 3
         st.button("🎲 СЛУЧАЙНЫЙ ФАКТ", on_click=set_query, args=(random.choice(RANDOM_FACTS),), use_container_width=True)
         st.button("🍷 СОЧЕТАНИЯ", on_click=set_query, args=(random.choice(RANDOM_PAIRINGS),), use_container_width=True)
         
     with col_grid[1]:
-        # Правая колонка: Кнопка 2 и Кнопка 4
         st.button("📜 РАНДОМ РЕЦЕПТ", on_click=set_query, args=(random.choice(RANDOM_RECIPES),), use_container_width=True)
         st.button("💡 СОВЕТ", on_click=set_query, args=(random.choice(RANDOM_TIPS),), use_container_width=True)
 
-    # Логика
     if st.session_state.trigger_query:
         st.session_state.history.append({"role": "user", "content": st.session_state.trigger_query})
         st.session_state.trigger_query = None
@@ -879,7 +869,7 @@ with t1:
         scroll_to_end(delay=10)
         st.rerun()
 
-    st.write("") # Отступ перед чатом
+    st.write("")
 
     for msg in st.session_state.history:
         with st.chat_message(msg["role"]):
@@ -942,6 +932,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
