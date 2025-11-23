@@ -660,7 +660,7 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС (ФИНАЛ: КНОПКА НИЖЕ + НЕ ПЕРЕКРЫВАЕТ МЕНЮ + МОЩНЫЙ JS)
+# 5. ИНТЕРФЕЙС (ФИНАЛ: ТИХАЯ КНОПКА, ТОЧНЫЙ КЛИК ПО МЕНЮ)
 # ==============================================================================
 import json
 import os
@@ -748,18 +748,18 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! КНОПКА ВХОДА (MAXIMUM POWER) !!!
+# !!! КНОПКА ВХОДА (БЕЗ ЛИШНИХ СЛОВ И ОШИБОК) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. Стили (Кнопка на месте, z-index меньше меню)
+    # 1. CSS: Кнопка висит красиво
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 150px !important;
-        right: 20px !important;
-        z-index: 50 !important;
+        top: 80px !important; /* Вернул чуть выше, чтобы было удобно */
+        right: 15px !important;
+        z-index: 999999 !important;
         background-color: #4285F4 !important;
         color: white !important;
         border: none !important;
@@ -769,52 +769,33 @@ if not st.session_state.get("authentication_status"):
         box-shadow: 0 4px 8px rgba(0,0,0,0.4) !important;
         width: auto !important;
     }
+    div.stButton > button[kind="primary"]:hover {
+        background-color: #357ae8 !important;
+        transform: scale(1.05) !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка
+    # 2. Кнопка: При нажатии только открывает меню
     if st.button("V Войти", key="float_login_btn", type="primary"):
-        # Ставим флаг, чтобы раскрыть форму входа внутри меню
+        
+        # Ставим флаг, чтобы раскрыть форму входа
         st.session_state['force_open_login'] = True
         
-        # 3. ЯДЕРНЫЙ СКРИПТ ОТКРЫТИЯ МЕНЮ
+        # 3. ТОЧНЫЙ JS (Нажимает ТОЛЬКО на стрелочку сайдбара)
         components.html("""
         <script>
-            function clickMenu() {
-                // Ищем кнопку меню по всем возможным признакам
-                const selectors = [
-                    '[data-testid="stSidebarCollapsedControl"]', // Стандарт
-                    '[data-testid="collapsedControl"]', // Старый стандарт
-                    'button[kind="header"]', // Мобильный хедер
-                    '#stSidebarCollapsedControl' // ID
-                ];
-                
-                let found = false;
-                selectors.forEach(sel => {
-                    const btn = window.parent.document.querySelector(sel);
-                    if (btn) {
-                        btn.click();
-                        found = true;
-                    }
-                });
-                
-                // Если нашли - отлично. Если нет - пробуем отправить сообщение.
-                if (!found) {
-                    window.parent.postMessage({type: "streamlit:setSidebarState", collapsed: false}, "*");
-                }
+            // Ищем строго по ID стрелочки Streamlit
+            const arrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (arrow) {
+                arrow.click();
             }
-
-            // Пытаемся нажать МНОГО РАЗ (на случай лагов телефона)
-            clickMenu();
-            setTimeout(clickMenu, 100);
-            setTimeout(clickMenu, 300);
-            setTimeout(clickMenu, 500);
-            setTimeout(clickMenu, 1000);
         </script>
         """, height=0, width=0)
         
-        # 4. Визуальная подсказка (на случай если JS заблокирован браузером)
-        st.toast("⬅ НАЖМИТЕ НА СТРЕЛОЧКУ СЛЕВА ВВЕРХУ!")
+        # Перезагружаем, чтобы обновить интерфейс (меню выедет)
+        st.rerun()
+
 
 # --- САЙДБАР ---
 with st.sidebar:
