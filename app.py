@@ -39,13 +39,12 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (ИСПРАВЛЕННАЯ)
+# 1.2. АВТОРИЗАЦИЯ (ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ)
 # ==============================================================================
 import streamlit_authenticator as stauth
 
 # 1. НАСТРОЙКИ (ПИШЕМ ПРЯМО В КОДЕ)
 if 'auth_config' not in st.session_state:
-    # Хеш пароля "123"
     hashed_pass = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"
     
     st.session_state.auth_config = {
@@ -63,8 +62,16 @@ if 'auth_config' not in st.session_state:
             'key': 'random_signature_key',
             'expiry_days': 1
         },
-        # ВАЖНО: Добавляем пустое поле, чтобы библиотека не ругалась
-        'preauthorized': {'emails': []} 
+        'preauthorized': {'emails': []},
+        # Настройки внешнего вида (Заголовок берется отсюда!)
+        'theme': {
+            'login': {
+                'username': 'Логин',
+                'password': 'Пароль',
+                'button': 'Войти',
+                'title': 'Вход в систему' 
+            }
+        }
     }
 
 # 2. ИНИЦИАЛИЗАЦИЯ
@@ -87,23 +94,22 @@ with st.sidebar:
     else:
         st.info("👀 Режим Гостя")
         
-        # Меню входа/регистрации
         choice = st.radio("Меню:", ["Вход", "Регистрация"], horizontal=True, label_visibility="collapsed")
         
         if choice == "Вход":
-            # ИСПРАВЛЕНИЕ: Добавили заголовок 'Вход' первым аргументом
             try:
-                name, authentication_status, username = authenticator.login('Вход', 'main')
+                # --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+                # Мы передаем только 'main'. Заголовок 'Вход' подтянется сам из theme выше.
+                name, authentication_status, username = authenticator.login('main')
                 
                 if authentication_status is False:
                     st.error('Неверный логин или пароль')
                 elif authentication_status is None:
                     st.warning('Введите данные')
-            except TypeError:
-                # Запасной вариант для старых версий библиотеки
-                name, authentication_status, username = authenticator.login('main')
+            except Exception as e:
+                st.error(f"Ошибка входа: {e}")
                 
-        else: # РЕГИСТРАЦИЯ (ВРЕМЕННАЯ)
+        else: # РЕГИСТРАЦИЯ
             with st.form("RegForm"):
                 st.write("**Создать аккаунт**")
                 new_user = st.text_input("Логин")
@@ -114,15 +120,12 @@ with st.sidebar:
                 if submitted:
                     if new_user and new_pass:
                         try:
-                            # Хешируем пароль
                             hashed_pw = stauth.Hasher([new_pass]).generate()[0]
-                            # Сохраняем в память
                             st.session_state.auth_config['credentials']['usernames'][new_user] = {
                                 'name': new_name,
                                 'password': hashed_pw,
                                 'email': f"{new_user}@mail.com"
                             }
-                            # Обновляем аутентификатор
                             authenticator.credentials = st.session_state.auth_config['credentials']
                             st.success("Готово! Переключитесь на 'Вход'.")
                         except Exception as e:
@@ -878,6 +881,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
