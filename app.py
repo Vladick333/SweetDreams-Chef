@@ -765,7 +765,7 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (МАКСИМАЛЬНАЯ ФИКСАЦИЯ) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИКСАЦИЯ НА ДИСКЕ: RIGHT + 160px) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
@@ -774,10 +774,10 @@ if not st.session_state.get("authentication_status"):
     <style>
     /* 1. Нацеливаемся на родительский блок кнопки, чтобы зафиксировать его */
     div[data-testid="stVerticalBlock"] > div > div:nth-child(1) div[data-testid="stHorizontalBlock"] > div:last-child > div.stButton {
-        /* ЭТО ДОЛЖНО РЕШИТЬ ПРОБЛЕМУ С ПРОКРУТКОЙ: */
         position: fixed !important; 
-        top: 100px !important; /* Фиксируем на удобной высоте */
+        top: 160px !important; /* УСТАНОВКА НОВОЙ НИЗКОЙ ПОЗИЦИИ */
         right: 20px !important;
+        left: unset !important; /* ГАРАНТИРУЕМ, ЧТО КНОПКА НЕ УЙДЕТ ВЛЕВО */
         z-index: 99999999 !important; /* МАКСИМАЛЬНЫЙ ПРИОРИТЕТ */
     }
     
@@ -810,7 +810,7 @@ if not st.session_state.get("authentication_status"):
         # 2. АГРЕССИВНЫЙ JS для открытия меню
         components.html("""
         <script>
-            // Метод 1: Отправляем сигнал Streamlit
+            // Отправляем сигнал в Streamlit, чтобы он сам открыл сайдбар
             window.parent.postMessage({
                 type: "streamlit:setSidebarState",
                 collapsed: false
@@ -959,6 +959,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
