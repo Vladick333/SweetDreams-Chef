@@ -91,96 +91,99 @@ def inject_css():
         }
 
 
-     /* --- ГЛАВНЫЕ КНОПКИ (БРОНЕБОЙНЫЙ ФИКС 2.0) --- */
-        /* Используем более строгий селектор div[data-testid="stButton"] > button */
-        /* Это заставит любой телефон подчиниться */
+     /* --- ГЛАВНЫЕ КНОПКИ (ФИНАЛ: МОБИЛЬНЫЕ + АНИМАЦИЯ + ЦЕНТР) --- */
         
+        /* 1. БАЗОВЫЙ СТИЛЬ (СПОКОЙНОЕ СОСТОЯНИЕ) */
         div[data-testid="stButton"] > button {
-            /* 1. ЖЕСТКИЙ ФОН (background вместо background-color стирает все градиенты) */
-            background: #1a1a1a !important; 
-            
-            /* 2. ПРИНУДИТЕЛЬНЫЙ ЦВЕТ ТЕКСТА (WebKit specific) */
+            /* Жесткий фон и цвет для телефонов (Игнорируем тему системы) */
+            background-color: #1a1a1a !important; 
             color: #FFFFFF !important; 
-            -webkit-text-fill-color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important; /* Для Safari */
             
-            /* 3. УБИРАЕМ МОБИЛЬНЫЕ СТИЛИ */
+            /* Рамки и форма */
             border: 2px solid #333 !important; 
             border-radius: 15px !important;
             box-shadow: none !important; 
             
-            /* 4. ОТКЛЮЧАЕМ ПРОЗРАЧНОСТЬ (Самое важное для Xiaomi) */
+            /* Отключаем прозрачность (Фикс Xiaomi/iPhone) */
             opacity: 1 !important;
-            isolation: isolate !important; /* Создает новый контекст наложения */
+            isolation: isolate !important;
             
-            /* 5. ФИКСЫ ОТОБРАЖЕНИЯ */
+            /* Убираем системные стили */
             -webkit-appearance: none !important;
             appearance: none !important;
+            background-image: none !important;
             
-            /* Размеры и шрифты (Ваш дизайн) */
-            padding: 5px 5px !important;    /* Чуть меньше отступы */
-            font-weight: 900 !important;
-            text-transform: uppercase !important;
-            font-size: 16px !important;
-            
-            /* АНИМАЦИЯ И РАЗМЕР (ИСПРАВЛЕНО ДЛЯ АЙФОНА) */
-            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-            transform: none !important;     /* В покое не крутимся */
-            min-height: 45px !important;    /* УМЕНЬШИЛ С 55 ДО 45, ЧТОБЫ ВЛЕЗЛО */
-            height: auto !important;
+            /* РАЗМЕРЫ (Оптимально для Айфона) */
+            padding: 5px 5px !important; 
+            min-height: 45px !important; 
+            height: auto !important;     
             white-space: normal !important; /* Разрешаем тексту переноситься */
             
-            /* ВЫРАВНИВАНИЕ */
+            /* Шрифт */
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+            font-size: 16px !important; 
+            line-height: 1.2 !important;
+            
+            /* Центрирование (Чтобы смайлики были ровно) */
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            
+            /* Настройка анимации (Плавность) */
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+            transform: translateZ(0) !important; /* Стабильность в покое */
         }
-        
-        /* Фикс текста внутри кнопки (чтобы не уезжал) */
+
+        /* Фикс для текста внутри (убираем отступы) */
         div[data-testid="stButton"] > button p {
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 1.1 !important;
+            line-height: 1.2 !important;
         }
 
-        /* Фикс конкретно для "Secondary" кнопок (серых), чтобы они не были прозрачными */
+        /* Фикс для серых кнопок (чтобы не были белыми на светлой теме) */
         div[data-testid="stButton"] > button[kind="secondary"] {
-            background: #1a1a1a !important;
+            background-color: #1a1a1a !important;
             color: #FFFFFF !important;
         }
 
-        /* Стиль первой кнопки (как на скриншоте) */
-        .main .stButton:nth-child(1) button {
+        /* Стиль первой кнопки (как на скриншоте - выделенная) */
+        div[data-testid="stButton"]:first-child > button {
              background-color: #1a1a1a !important; 
-             color: #FFFFFF !important; 
              border: 2px solid #444 !important;
         }
 
         /* Стиль остальных кнопок */
-        .main .stButton:not(:nth-child(1)) button {
+        div[data-testid="stButton"]:not(:first-child) > button {
             background-color: rgba(255, 255, 255, 0.05) !important; 
             border: 2px solid #333 !important;
             color: #FFFFFF !important; 
         }
 
-        /* При наведении */
-        .main .stButton button:hover {
-            background-color: #00E5FF !important; 
-            color: #000000 !important;
+        /* 2. ПРИ НАВЕДЕНИИ (АНИМАЦИЯ ВКЛЮЧАЕТСЯ ТУТ) */
+        div[data-testid="stButton"] > button:hover {
             border-color: #00E5FF !important;
+            color: #000000 !important; /* Черный текст при наведении */
+            -webkit-text-fill-color: #000000 !important;
+            background-color: #00E5FF !important;
             
-            /* ВОТ ЗДЕСЬ ВКЛЮЧАЕТСЯ АНИМАЦИЯ */
-            transform: translateY(-2px) scale(1.02) !important; 
             box-shadow: 0 5px 15px rgba(0, 229, 255, 0.2) !important;
+            
+            /* ВОЗВРАЩАЕМ ДВИЖЕНИЕ */
+            transform: translateY(-3px) scale(1.02) !important; 
         }
 
-        /* При нажатии */
-        .main .stButton button:active {
-            background-color: #0099CC !important;
-            color: #fff !important;
+        /* 3. ПРИ НАЖАТИИ (ЭФФЕКТ ВДАВЛИВАНИЯ) */
+        div[data-testid="stButton"] > button:active {
             border-color: #0099CC !important;
+            background-color: #0099CC !important;
+            color: #FFFFFF !important;
+            -webkit-text-fill-color: #FFFFFF !important;
             
-            /* ВОТ ЗДЕСЬ ЭФФЕКТ ВДАВЛИВАНИЯ */
-            transform: scale(0.95) !important; 
+            /* Сжимаем кнопку */
+            transform: scale(0.95) !important;
         }
         /* --- ТЕКСТ ИИ В ЧАТЕ (БЕЛЫЙ) --- */
         [data-testid="stChatMessageContent"] p, 
@@ -778,6 +781,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
