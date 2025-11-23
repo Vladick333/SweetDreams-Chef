@@ -765,16 +765,16 @@ def scroll_to_end(delay=100):
 
 
 # =================================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (НАДЕЖНЫЙ ФИНАЛ) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ФИНАЛЬНЫЙ РАБОЧИЙ ВАРИАНТ) !!!
 # =================================================================
 if not st.session_state.get("authentication_status"):
     
-    # 1. CSS: Крепим кнопку справа сверху
+    # 1. CSS: Крепим кнопку справа сверху (Новая высота: 120px)
     st.markdown("""
     <style>
     div.stButton > button[kind="primary"] {
         position: fixed !important;
-        top: 100px !important; /* Удобная позиция */
+        top: 120px !important; /* УСТАНОВЛЕНА НОВАЯ ВЫСОТА */
         right: 20px !important;
         z-index: 99999 !important;
         background-color: #4285F4 !important;
@@ -793,16 +793,29 @@ if not st.session_state.get("authentication_status"):
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Кнопка (При нажатии устанавливает флаг и показывает Toast)
+    # 2. Кнопка (При нажатии устанавливает флаги и вызывает JS)
     if st.button("V Войти", key="float_login_btn", type="primary"):
         
-        # Устанавливаем флаг, чтобы раскрыть Expander в сайдбаре
+        # 1. Устанавливаем флаги Python (для открытия Expander и Toast)
         st.session_state['force_open_login'] = True
+        st.session_state['show_login_toast_flag'] = True
         
-        # Показываем подсказку (это 100% сработает)
-        st.toast("⬅ Нажмите на стрелочку меню слева для входа", icon="👉")
+        # 2. JS для открытия меню (САМЫЙ НАДЕЖНЫЙ МЕТОД - postMessage)
+        components.html("""
+        <script>
+            // Отправляем сигнал в Streamlit, чтобы он сам открыл сайдбар
+            window.parent.postMessage({
+                type: "streamlit:setSidebarState",
+                collapsed: false
+            }, "*");
+            
+            // Запасной клик по стрелке (на всякий случай)
+            const arrow = window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+            if (arrow) { arrow.click(); }
+        </script>
+        """, height=0, width=0)
         
-        # Перезагружаем, чтобы меню увидела флаг и раскрыла Expander
+        # 3. Перезагружаем (для активации Toast и Expander)
         st.rerun()
 
 # --- САЙДБАР ---
@@ -944,6 +957,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
