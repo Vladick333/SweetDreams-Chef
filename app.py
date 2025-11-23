@@ -660,24 +660,23 @@ def ai_engine(history, prompt, mode):
     except Exception as e:
         return f"⚠ Error: {e}"
 # ==============================================================================
-# 5. ИНТЕРФЕЙС (УМНАЯ ПАМЯТЬ: ФАЙЛ ТОЛЬКО ДЛЯ ЗАРЕГИСТРИРОВАННЫХ)
+# 5. ИНТЕРФЕЙС (С СОХРАНЕНИЕМ ИСТОРИИ В ФАЙЛ)
 # ==============================================================================
 import json
 import os
 
 # --- ФУНКЦИИ ПАМЯТИ ---
 def get_history_filename():
-    # Имя файла привязано к логину
+    # Имя файла привязано к логину (чтобы у каждого была своя история)
     username = st.session_state.get("username", "guest")
     safe_name = "".join([c for c in username if c.isalnum() or c in (' ', '_', '-')]).strip()
     return f"history_{safe_name}.json"
 
 def load_history():
-    # 1. ПРОВЕРКА: Если это Гость — не загружаем ничего из файлов!
+    # Если гость - не грузим
     if not st.session_state.get("authentication_status"):
-        return [] 
-
-    # 2. Если пользователь вошел — ищем его личный файл
+        return []
+    
     filename = get_history_filename()
     if os.path.exists(filename):
         try:
@@ -688,11 +687,10 @@ def load_history():
     return []
 
 def save_history():
-    # 1. ПРОВЕРКА: Если это Гость — НЕ сохраняем в файл! (Только память браузера)
+    # Если гость - не сохраняем в файл (только в память)
     if not st.session_state.get("authentication_status"):
-        return 
+        return
 
-    # 2. Если пользователь вошел — пишем на диск
     filename = get_history_filename()
     try:
         with open(filename, "w", encoding="utf-8") as f:
@@ -701,20 +699,19 @@ def save_history():
         print(f"Ошибка сохранения: {e}")
 
 # --- ИНИЦИАЛИЗАЦИЯ ПРИ ЗАПУСКЕ ---
-# Проверяем смену пользователя (Гость -> Админ или наоборот)
+# Проверяем смену пользователя
 if 'last_logged_user' not in st.session_state:
     st.session_state.last_logged_user = st.session_state.get("username", "guest")
 
 current_user = st.session_state.get("username", "guest")
 
-# Если пользователь сменился, перезагружаем историю под него
 if current_user != st.session_state.last_logged_user:
     st.session_state.last_logged_user = current_user
-    st.session_state.chats = load_history() # Загружаем (или очищаем для гостя)
+    st.session_state.chats = load_history() # Загружаем чужую историю
     st.session_state.history = [] 
     st.session_state.current_chat_id = None
 
-# Обычная инициализация
+# Инициализация переменных
 if 'chats' not in st.session_state: 
     st.session_state.chats = load_history()
 
@@ -725,59 +722,75 @@ if 'vec' not in st.session_state: st.session_state.vec = [5] * len(FEATURES)
 if 'trigger_query' not in st.session_state: st.session_state.trigger_query = None
 
 
-# --- УПРАВЛЕНИЕ ЧАТАМИ ---
+# --- ФУНКЦИИ УПРАВЛЕНИЯ ЧАТАМИ ---
 def save_current_chat():
-    """Сохраняет чат в память (всегда) и на диск (если вошел)"""
-    if not st.session_state.history: return
+    """Сохраняет текущую переписку в архив перед сменой чата"""
+    if not st.session_state.history:
+        return  # Не сохраняем пустые чаты
 
+    # Генерируем название
     title = "Новый диалог"
     for msg in st.session_state.history:
         if msg["role"] == "user":
             title = msg["content"][:25] + "..." if len(msg["content"]) > 25 else msg["content"]
             break
-            
+
     chat_data = {
         "title": title,
         "history": st.session_state.history,
         "mode": st.session_state.mode
     }
 
+    # Если мы в старом чате - обновляем его
     if st.session_state.current_chat_id is not None:
         if st.session_state.current_chat_id < len(st.session_state.chats):
             st.session_state.chats[st.session_state.current_chat_id] = chat_data
     else:
+        # Если это новый чат - добавляем в список
         st.session_state.chats.append(chat_data)
         st.session_state.current_chat_id = len(st.session_state.chats) - 1
     
-    # Попытка сохранить на диск (функция сама проверит, можно ли)
-    save_history() 
+    # Сохраняем в файл (если пользователь вошел)
+    save_history()
+
 
 def create_new_chat():
+    """Начинает новый диалог"""
     save_current_chat()
     st.session_state.history = []
     st.session_state.current_chat_id = None
 
+
 def load_chat(index):
+    """Загружает чат из архива"""
     save_current_chat()
     st.session_state.history = st.session_state.chats[index]["history"]
     st.session_state.mode = st.session_state.chats[index].get("mode", "AI")
     st.session_state.current_chat_id = index
 
+
 def clear_archives_only():
+    """Удаляет историю"""
     st.session_state.chats = []
     st.session_state.current_chat_id = None
+    st.session_state.history = []
     
-    # Если пользователь вошел - удаляем его файл
+    # Удаляем файл тоже
     if st.session_state.get("authentication_status"):
         filename = get_history_filename()
         if os.path.exists(filename):
             os.remove(filename)
 
+
+# Функция для скролла
 def scroll_to_end(delay=100):
     components.html(f"""<script>setTimeout(() => {{const e = window.parent.document.getElementById('end-chat');if(e){{e.scrollIntoView({{behavior: "smooth", block: "end"}});}}}}, {delay});</script>""", height=0)
 
 
-# --- 4. САЙДБАР ---
+# !!! КНОПКА ВХОДА !!!
+st.markdown("""<div class="login-button"><button onclick="window.parent.alert('Вход через Google скоро!')"><span class="google-icon">G</span> Войти</button></div>""", unsafe_allow_html=True)
+
+# --- САЙДБАР ---
 with st.sidebar:
     st.title("⚙️ МЕНЮ")
 
@@ -791,7 +804,7 @@ with st.sidebar:
     current_idx = 0
     if st.session_state.mode == "CHEF": current_idx = 1
     elif st.session_state.mode == "KIND": current_idx = 2
-    
+
     selected_option = st.radio(
         "", ["Ассистент", "Шеф-Повар", "Добрячок"], 
         index=current_idx, label_visibility="collapsed", key="mode_radio_widget"
@@ -800,7 +813,7 @@ with st.sidebar:
     target_mode = "AI"
     if selected_option == "Шеф-Повар": target_mode = "CHEF"
     elif selected_option == "Добрячок": target_mode = "KIND"
-    
+
     if target_mode != st.session_state.mode:
         st.session_state.mode = target_mode
         save_current_chat()
@@ -812,18 +825,17 @@ with st.sidebar:
     st.divider()
 
     st.write("### 🗂 АРХИВ")
-    
-    # ПОДСКАЗКА ДЛЯ ГОСТЯ
-    if not st.session_state.get("authentication_status"):
-        st.caption("⚠ Гостевой режим: история удалится при перезагрузке")
-        
     if not st.session_state.chats:
-        st.caption("Нет диалогов")
-    
+        st.caption("Нет сохраненных диалогов")
+
     for i, chat in reversed(list(enumerate(st.session_state.chats))):
-        label = f"🟢 {chat['title']}" if i == st.session_state.current_chat_id else f"💬 {chat['title']}"
-        btn_type = "primary" if i == st.session_state.current_chat_id else "secondary"
-        if st.button(label, key=f"chat_{i}", use_container_width=True, type=btn_type):
+        label = f"💬 {chat['title']}"
+        type_btn = "secondary"
+        if i == st.session_state.current_chat_id:
+            label = f"🟢 {chat['title']}"
+            type_btn = "primary"
+
+        if st.button(label, key=f"chat_btn_{i}", use_container_width=True, type=type_btn):
             load_chat(i)
             st.rerun()
 
@@ -832,10 +844,10 @@ with st.sidebar:
         clear_archives_only()
         st.rerun()
 
-
-# --- 5. ОСНОВНОЙ ЭКРАН ---
+# --- ТАБЫ ---
 t1, t2, t3 = st.tabs(["💬 ЧАТ", "🎛 ВКУСЫ", "📂 БАЗА"])
 
+# --- ЧАТ ---
 with t1:
     st.markdown("<h1 style='text-align: center; margin-bottom: 30px;'>Vladыка <span style='color:#00E5FF'>AI</span></h1>", unsafe_allow_html=True)
 
@@ -886,10 +898,10 @@ with t1:
             st.markdown(resp)
         
         st.session_state.history.append({"role": "assistant", "content": resp})
-        save_current_chat() 
+        save_current_chat() # Сохраняем (если вошел)
         scroll_to_end(delay=300)
 
-
+# --- ВЕКТОРЫ ---
 with t2:
     st.header("🧬 ПОДБОР ВКУСА")
     c_sl, c_res = st.columns([1, 1.5])
@@ -921,7 +933,7 @@ with t2:
                 <div style="background:#333; height:8px; width:100%; border-radius:4px; margin-top:10px;"><div style="background: linear-gradient(90deg, #00E5FF, #2979FF); width:{sc}%; height:100%; border-radius:4px;"></div></div>
             </div>""", unsafe_allow_html=True)
 
-
+# --- БАЗА ---
 with t3:
     st.header("📂 БАЗА ДАННЫХ")
     df = pd.DataFrame(DB)
