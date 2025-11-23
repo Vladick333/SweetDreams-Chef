@@ -5,7 +5,6 @@ credentials:
       failed_login_attempts: 0
       logged_in: false
       name: Администратор
-      # Внизу зашифрованный пароль "123". Копируйте эту строку целиком!
       password: "$2b$12$1.rIS/fXJj.X/j.X/j.X/j.X/j.X/j.X/j.X/j.X/j.X/j.X/j."
 cookie:
   expiry_days: 30
@@ -13,3 +12,12 @@ cookie:
   name: some_cookie_name
 preauthorized:
   emails: []
+
+# === ДОБАВЬТЕ ВОТ ЭТО В КОНЕЦ ===
+# Это переведет форму входа на русский
+theme:
+  login:
+    username: 'Электронная почта'
+    password: 'Ваш пароль'
+    button: 'Войти в систему'
+    title: 'Добро пожаловать'
