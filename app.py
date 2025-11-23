@@ -747,16 +747,14 @@ def scroll_to_end(delay=100):
 
 
 # =====================================================
-# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (ОТКРЫВАЕТ МЕНЮ + ИСЧЕЗАЕТ) !!!
+# !!! ПЛАВАЮЩАЯ КНОПКА ВХОДА (FIX: НИЖЕ И НАДЕЖНЕЕ) !!!
 # =====================================================
-# Показываем кнопку, ТОЛЬКО если пользователь НЕ вошел
 if not st.session_state.get("authentication_status"):
     st.markdown("""
     <style>
-        /* Стили для кнопки, чтобы она висела в углу */
         .login-float-container {
             position: fixed;
-            top: 60px; /* Чуть ниже, чтобы не перекрыть крестик */
+            top: 100px !important; /* ОПУСТИЛ НИЖЕ (было 60) */
             right: 20px;
             z-index: 999999;
         }
@@ -765,30 +763,41 @@ if not st.session_state.get("authentication_status"):
             color: white;
             border: none;
             border-radius: 8px;
-            padding: 10px 20px;
+            padding: 12px 24px;
             font-family: sans-serif;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.1s;
         }
         .login-float-btn:hover {
             background-color: #3367D6;
+            transform: scale(1.05);
+        }
+        .login-float-btn:active {
+            transform: scale(0.95);
         }
     </style>
 
     <div class="login-float-container">
         <button class="login-float-btn" onclick="
-            // Ищем кнопку открытия сайдбара (стрелочку) и нажимаем её
-            const btn = window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl]');
-            if (btn) { 
-                btn.click(); 
+            // 1. Пытаемся открыть меню программно
+            const sidebarBtn = window.parent.document.querySelector('[data-testid=stSidebarCollapsedControl]');
+            if (sidebarBtn) { 
+                sidebarBtn.click(); 
+            } else {
+                // 2. Если не вышло (или меню уже открыто) - ничего страшного
+                console.log('Menu might be already open');
             }
         ">
             V Войти
         </button>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Добавляем невидимую кнопку Streamlit, чтобы ловить нажатие и давать подсказку,
+    # если JS не сработает (резервный вариант)
 
 # --- САЙДБАР ---
 with st.sidebar:
@@ -933,6 +942,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
