@@ -402,7 +402,11 @@ def inject_css():
             display: flex;
             justify-content: center;
         }
-
+/* --- СУРГИЧЕСКОЕ ИСПРАВЛЕНИЕ ОШИБКИ МОБИЛЬНОЙ ФОРМЫ --- */
+        div[data-testid="stFormSubmitHelper"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
         .stChatInput > div {
             width: 50% !important; 
             min-width: 400px;
@@ -959,6 +963,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
