@@ -39,16 +39,22 @@ except KeyError:
     API_KEYS_POOL = []
 
 # ==============================================================================
-# 1.2. АВТОРИЗАЦИЯ (РУЧНАЯ: 100% РУССКИЙ ЯЗЫК + БЕЗ ОШИБОК)
+# 1.2. АВТОРИЗАЦИЯ (ВЕРСИЯ С ПАМЯТЬЮ: ЧТОБЫ НЕ ЗАБЫВАЛ НОВЫХ)
 # ==============================================================================
-try:
-    with open('config.yaml') as file:
-        config = yaml.load(file, Loader=SafeLoader)
-except FileNotFoundError:
-    st.error("⚠️ Файл config.yaml не найден!")
-    st.stop()
 
-# Создаем объект (нужен для утилит), но рисовать им не будем
+# 1. ЗАГРУЖАЕМ БАЗУ В ПАМЯТЬ (ОДИН РАЗ)
+if 'auth_config' not in st.session_state:
+    try:
+        with open('config.yaml') as file:
+            st.session_state.auth_config = yaml.load(file, Loader=SafeLoader)
+    except FileNotFoundError:
+        st.error("⚠️ Файл config.yaml не найден!")
+        st.stop()
+
+# Для удобства создаем короткую ссылку на конфиг из памяти
+config = st.session_state.auth_config
+
+# Инициализация (формальная, для куки)
 authenticator = stauth.Authenticate(
     config['credentials'],
     config['cookie']['name'],
@@ -57,30 +63,28 @@ authenticator = stauth.Authenticate(
 )
 
 # --- ПРОВЕРКА: ВОШЕЛ ЛИ ПОЛЬЗОВАТЕЛЬ? ---
-# Проверяем нашу переменную сессии
 if st.session_state.get("authentication_status"):
     
-    # === ЕСЛИ УЖЕ ВОШЕЛ ===
+    # === УСПЕШНЫЙ ВХОД ===
     st.session_state.user_email = st.session_state["username"]
     
+    # Сайдбар с кнопкой выхода
     with st.sidebar:
-        # Достаем имя из конфига
         user_data = config['credentials']['usernames'].get(st.session_state["username"], {})
         name_display = user_data.get('name', st.session_state["username"])
         
         st.write(f"👋 Привет, *{name_display}*!")
         
-        # Кнопка выхода
-        if st.button("Выйти", key="logout_btn"):
+        if st.button("Выйти", key="logout_main"):
             st.session_state["authentication_status"] = None
             st.session_state["username"] = None
             st.rerun()
 
 else:
-    # === ЕСЛИ НЕ ВОШЕЛ: РИСУЕМ СВОИ ФОРМЫ ===
+    # === ЕСЛИ НЕ ВОШЕЛ ===
     tab_login, tab_reg = st.tabs(["🔑 Вход", "📝 Регистрация"])
 
-    # 1. ФОРМА ВХОДА (РУЧНАЯ)
+    # 1. ФОРМА ВХОДА
     with tab_login:
         with st.form("LoginForm"):
             st.subheader("Вход в систему")
@@ -89,13 +93,11 @@ else:
             btn_login = st.form_submit_button("Войти")
 
         if btn_login:
+            # ПРОВЕРЯЕМ В БАЗЕ ИЗ ПАМЯТИ (auth_config)
             if login_email in config['credentials']['usernames']:
-                # Получаем зашифрованный пароль из файла
                 stored_hash = config['credentials']['usernames'][login_email]['password']
                 
-                # Проверяем пароль
                 if bcrypt.checkpw(login_pass.encode('utf-8'), stored_hash.encode('utf-8')):
-                    # УСПЕХ!
                     st.session_state["authentication_status"] = True
                     st.session_state["username"] = login_email
                     st.session_state["name"] = config['credentials']['usernames'][login_email]['name']
@@ -106,12 +108,12 @@ else:
             else:
                 st.error("❌ Пользователь не найден")
 
-    # 2. ФОРМА РЕГИСТРАЦИИ (РУЧНАЯ)
+    # 2. ФОРМА РЕГИСТРАЦИИ
     with tab_reg:
         with st.form("RegForm"):
-            st.subheader("Новый аккаунт")
+            st.subheader("Создание аккаунта")
             new_email = st.text_input("Электронная почта")
-            new_pass = st.text_input("Пароль", type="password")
+            new_pass = st.text_input("Придумайте пароль", type="password")
             new_pass_2 = st.text_input("Подтвердите пароль", type="password")
             btn_reg = st.form_submit_button("Зарегистрироваться")
 
@@ -121,30 +123,31 @@ else:
             elif new_pass != new_pass_2:
                 st.error("❌ Пароли не совпадают!")
             elif new_email in config['credentials']['usernames']:
-                st.error("❌ Такая почта уже зарегистрирована!")
+                st.error("❌ Такая почта уже есть!")
             else:
                 try:
-                    # Шифруем пароль
                     hashed_bytes = bcrypt.hashpw(new_pass.encode('utf-8'), bcrypt.gensalt())
                     hashed_str = hashed_bytes.decode('utf-8')
                     
-                    # Сохраняем в конфиг
-                    config['credentials']['usernames'][new_email] = {
+                    # 1. ОБНОВЛЯЕМ ПАМЯТЬ (Чтобы работало сразу)
+                    new_user_data = {
                         'name': new_email,
                         'email': new_email,
                         'password': hashed_str,
                         'failed_login_attempts': 0,
                         'logged_in': False
                     }
+                    st.session_state.auth_config['credentials']['usernames'][new_email] = new_user_data
                     
+                    # 2. ОБНОВЛЯЕМ ФАЙЛ (На будущее)
                     with open('config.yaml', 'w') as file:
-                        yaml.dump(config, file, default_flow_style=False)
+                        yaml.dump(st.session_state.auth_config, file, default_flow_style=False)
                     
                     st.success("✅ Аккаунт создан! Теперь войдите на вкладке 'Вход'.")
                 except Exception as e:
                     st.error(f"Ошибка: {e}")
 
-    # ОСТАНОВКА (Не пускаем к боту без входа)
+    # ОСТАНОВКА
     if not st.session_state.get("authentication_status"):
         st.stop()
 # ==============================================================================
@@ -892,6 +895,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
