@@ -524,54 +524,7 @@ def inject_css():
             padding: 20px;
             margin-bottom: 15px;
         }
-/* ========================================================================== */
-        /* === ВСТАВЛЯТЬ СЮДА (ФИКС ДЛЯ ФОРМЫ ВХОДА) === */
-        /* ========================================================================== */
-
-        /* 1. ДЕЛАЕМ ПОЛЯ ВВОДА БЕЛЫМИ С ЧЕРНЫМ ТЕКСТОМ */
-        [data-testid="stTextInput"] input {
-            background-color: #FFFFFF !important; 
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            caret-color: #000000 !important;
-            border: 1px solid #CCCCCC !important;
-        }
-        
-        /* Фон контейнера ввода тоже белый */
-        [data-testid="stTextInput"] > div > div {
-            background-color: #FFFFFF !important;
-        }
-
-        /* 2. ПОДПИСИ (Email, Пароль) - ДЕЛАЕМ ЧИТАЕМЫМИ */
-        [data-testid="stTextInput"] label p {
-            color: #FFFFFF !important;
-            font-weight: bold !important;
-            text-shadow: 0px 0px 5px rgba(0,0,0,1) !important;
-        }
-
-        /* 3. ИСПРАВЛЕНИЕ КНОПОК ВНУТРИ ФОРМЫ */
-        [data-testid="stForm"] [data-testid="stButton"] > button {
-            background-color: #00E5FF !important;
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            border: none !important;
-            font-weight: bold !important;
-            margin-top: 10px !important;
-            width: 100% !important;
-        }
-
-        /* 4. ИСПРАВЛЕНИЕ "ГЛАЗКА" ПАРОЛЯ */
-        button[title="Show password"], button[title="Hide password"] {
-            color: #333333 !important;
-        }
-
-        /* 5. ФОН САМОЙ ФОРМЫ */
-        div[data-testid="stForm"] {
-            border: 1px solid #333;
-            padding: 20px;
-            border-radius: 15px;
-            background-color: #111111 !important;
-        }
+    
     </style>
     """, unsafe_allow_html=True)
 
@@ -1006,6 +959,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
