@@ -526,48 +526,32 @@ def inject_css():
         }
 
     /* ========================================================================== */
-        /* === ФИНАЛЬНЫЙ ФИКС ВХОДА (КОНТРАСТ + ГЛАЗОК) === */
+        /* === ФИНАЛЬНЫЙ ФИКС: ПАРОЛЬ И КНОПКА РЕГИСТРАЦИИ === */
         /* ========================================================================== */
+
+        /* 1. ФИКС ГЛАЗИКА (ВИДИМОСТЬ И ВЫРАВНИВАНИЕ) */
+        /* Заставляем контейнер пароля быть гибким, чтобы кнопка "глазик" не выпадала */
+        div[data-baseweb="input"]:has(input[type="password"]) {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding-right: 0 !important; /* Убираем лишний отступ */
+        }
         
-        /* 1. КАРТОЧКА ФОРМЫ: ВСЕГДА ТЕМНАЯ (ЗАЩИТА ФОРМЫ ОТ СВЕТЛОГО ФОНА) */
-        div[data-testid="stForm"] {
-            background-color: #161616 !important; /* Темный фон самой карточки */
-            border: 1px solid #333;
-            padding: 20px;
-            border-radius: 15px;
+        /* Фикс самой кнопки глазика (делаем её белой и выравниваем) */
+        button[data-baseweb="button"] { 
+            color: #FFFFFF !important; 
+            margin-right: 0 !important;
+            min-width: 40px !important; /* Чтобы кнопка не была слишком узкой */
+            height: 45px !important; /* Уравниваем высоту с полем ввода */
         }
 
-        /* 2. ПОЛЯ ВВОДА (Input fields): ВСЕГДА ЧИТАБЕЛЬНЫЕ */
-        [data-testid="stTextInput"] input, 
-        [data-testid="stTextInput"] textarea {
-            color: #000000 !important; /* Текст внутри: ЧЕРНЫЙ */
-            -webkit-text-fill-color: #000000 !important; /* Fix Safari/iPhone */
-            background-color: #FFFFFF !important; /* Фон поля: БЕЛЫЙ */
-            border: 1px solid #CCCCCC !important;
-            caret-color: #000000 !important; /* Курсор черный */
-        }
-
-        /* 3. ПОДПИСИ (Labels): ОСТАЮТСЯ БЕЛЫМИ НА ТЕМНОМ ФОНЕ ФОРМЫ */
-        [data-testid="stTextInput"] label p {
-            color: #FFFFFF !important;
-            font-weight: bold !important;
-        }
-
-        /* 4. КНОПКИ ВНУТРИ ФОРМЫ (Войти/Зарегистрироваться) */
-        [data-testid="stForm"] [data-testid="stButton"] > button {
-            /* Возвращаем стиль темной кнопки, но с принудительными цветами */
-            background-color: #1a1a1a !important; 
-            color: #FFFFFF !important;
-            border: 2px solid #333 !important;
-            margin-top: 10px !important;
-            width: 100% !important; /* Фикс съехавшей ширины */
-        }
-
-        /* 5. ФИКС ГЛАЗКА ПАРОЛЯ */
-        /* Глазок должен быть темным, чтобы его было видно на белом фоне поля ввода */
-        button[title="Show password"], button[title="Hide password"] {
-            color: #333333 !important; 
-            background: transparent !important;
+        /* 2. ФИКС КНОПКИ "ЗАРЕГИСТРИРОВАТЬСЯ" (Убираем перенос текста) */
+        /* Увеличиваем вертикальный отступ, чтобы вместить длинный текст */
+        [data-testid="stForm"] button[kind="primary"] {
+            padding: 10px 5px !important; /* Увеличиваем вертикальный отступ */
+            height: auto !important; /* Разрешаем кнопке быть выше */
+            line-height: 1.1 !important; /* Уплотняем текст */
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1003,6 +987,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
