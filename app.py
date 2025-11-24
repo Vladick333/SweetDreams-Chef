@@ -525,10 +525,18 @@ def inject_css():
             margin-bottom: 15px;
         }
 
-                           /* === ФИНАЛЬНЫЙ ФИКС — КНОПКА EXPANDER КАК ТЕБЕ НРАВИТСЯ + КНОПКИ ВОЙТИ/РЕГИСТРАЦИЯ ЯРКО-ГОЛУБЫЕ === */
+                                   /* === ФИНАЛЬНЫЙ ВАРИАНТ — ТОЧНО КАК ТЫ ХОТЕЛ === */
         
-        /* КНОПКА "Вход / Регистрация" — ВЕРНУЛ САМЫЙ КРАСИВЫЙ ВАРИАНТ (НЕ ТРОГАЙ ЕЁ БОЛЬШЕ!) */
-        [data-testid="stExpander"] details summary {
+        /* Глазик пароля — ярко-голубой всегда */
+        div[data-testid="stTextInput"] button[title="View password"],
+        div[data-testid="stTextInput"] button svg {
+            color: #00E5FF !important;
+            fill: #00E5FF !important;
+            opacity: 1 !important;
+        }
+
+        /* Кнопки "Войти" и "Зарегистрироваться" — ТОЧНО КАК КНОПКА "Вход / Регистрация" */
+        div[data-testid="stForm"] button[kind="primary"] {
             background-color: #1a1a1a !important;
             color: #00E5FF !important;
             border: 2px solid #00E5FF !important;
@@ -536,45 +544,14 @@ def inject_css():
             padding: 14px 18px !important;
             font-weight: 800 !important;
             font-size: 17px !important;
+            text-transform: uppercase !important;
             box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2) !important;
+            min-height: 56px !important;
         }
-        [data-testid="stExpander"] details summary:hover {
+        div[data-testid="stForm"] button[kind="primary"]:hover {
             background-color: #00E5FF !important;
             color: #000 !important;
             transform: translateY(-2px) !important;
-        }
-
-        /* КНОПКИ "Войти" и "Зарегистрироваться" — ЯРКИЙ НЕОНОВЫЙ ГРАДИЕНТ */
-        div[data-testid="stForm"] button[kind="primary"],
-        form button[kind="primary"],
-        button[kind="primary"] {
-            background: linear-gradient(135deg, #00E5FF, #2979FF) !important;
-            color: #000000 !important;
-            border: none !important;
-            border-radius: 12px !important;
-            font-weight: 900 !important;
-            text-transform: uppercase !important;
-            padding: 16px 32px !important;
-            min-height: 56px !important;
-            box-shadow: 0 8px 30px rgba(0, 229, 255, 0.6) !important;
-            transition: all 0.2s ease !important;
-        }
-        div[data-testid="stForm"] button[kind="primary"]:hover,
-        button[kind="primary"]:hover {
-            transform: translateY(-4px) !important;
-            box-shadow: 0 15px 40px rgba(0, 229, 255, 0.8) !important;
-        }
-
-        /* Поля ввода — чёрные на любой теме (на всякий случай усиливаем) */
-        div[data-testid="stTextInput"] input {
-            background-color: #111111 !important;
-            color: #ffffff !important;
-            border: 2px solid #333 !important;
-            caret-color: #00E5FF !important;
-        }
-        div[data-testid="stTextInput"] input:focus {
-            border-color: #00E5FF !important;
-            box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1010,6 +987,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
