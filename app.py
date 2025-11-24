@@ -545,14 +545,14 @@ def inject_css():
             transform: translateY(-2px) !important;
         }
 
-        /* 1. ГЛАЗИК ПАРОЛЯ — ЯРКО-ГОЛУБОЙ ВСЕГДА */
-        button[title="Show password"], 
-        button[title="Hide password"] {
+        /* === ФИНАЛЬНЫЙ ВАРИАНТ — ТОЧНО КАК ТЫ ХОТЕЛ === */
+        
+        /* Глазик пароля — ярко-голубой всегда */
+        div[data-testid="stTextInput"] button[title="View password"],
+        div[data-testid="stTextInput"] button svg {
             color: #00E5FF !important;
             fill: #00E5FF !important;
             opacity: 1 !important;
-            background: transparent !important;
-            border: none !important;
         }
         /* Если внутри svg - красим и его */
         button[title="Show password"] svg, 
@@ -1028,6 +1028,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
