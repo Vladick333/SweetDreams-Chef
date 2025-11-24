@@ -629,17 +629,21 @@ def inject_css():
         div[data-testid="stTextInput"] input:focus {
             border-radius: 12px !important;
         }
-               /* === УБИРАЕМ "PRESS ENTER TO SEND" В CHAT_INPUT (ФИНАЛЬНО) === */
+                /* === УБИРАЕМ "PRESS ENTER TO SEND" В CHAT_INPUT И "SUBMIT FORM" В ФОРМАХ (УСИЛЕННЫЙ) === */
+[data-testid="InputInstructions"],
 [data-testid="stChatInput"] [data-testid="InputInstructions"],
-[data-testid="stChatInput"] div[data-testid="InputInstructions"] > span,
-[data-testid="stChatInput"] small,
-.stChatInput [data-testid="InputInstructions"] {
+[data-testid="stForm"] [data-testid="InputInstructions"],
+[data-testid="stTextInput"] [data-testid="InputInstructions"],
+.st-emotion-cache-1v0mbdj {  /* Если data-testid не сработает, это класс из эмоушен (может меняться, но часто работает) */
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
     opacity: 0 !important;
+}
+[data-testid="InputInstructions"] > span {
+    display: none !important;  /* Дополнительно спрячем внутренний span */
 }
     </style>
     """, unsafe_allow_html=True)
@@ -1075,6 +1079,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
