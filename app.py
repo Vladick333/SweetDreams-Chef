@@ -605,6 +605,13 @@ def inject_css():
             border-color: #00E5FF !important;
             box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
         }
+        /* 2. ФИКС КОНТЕЙНЕРА (ЧТОБЫ ФОН ПОД ГЛАЗИКОМ БЫЛ ТЕМНЫМ) */
+        /* Это главное! Мы красим коробку, в которой лежит пароль и глазик */
+        div[data-baseweb="input"] {
+            background-color: #111111 !important; /* Темный фон всегда */
+            border-radius: 12px !important; /* Закругление контейнера */
+            border: none !important; /* Убираем двойные рамки */
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1039,6 +1046,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
