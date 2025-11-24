@@ -524,7 +524,50 @@ def inject_css():
             padding: 20px;
             margin-bottom: 15px;
         }
-    
+
+    /* ========================================================================== */
+        /* === ФИКС ДЛЯ ФОРМЫ ВХОДА (ЧТОБЫ БЫЛО ВИДНО НА ТЕЛЕФОНЕ) === */
+        /* ========================================================================== */
+
+        /* 1. Поля ввода: Белый фон, Черный текст */
+        [data-testid="stTextInput"] input {
+            background-color: #FFFFFF !important; 
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important; /* Для iPhone */
+            caret-color: #000000 !important;
+            border: 1px solid #CCCCCC !important;
+        }
+        
+        /* Фон контейнера ввода */
+        [data-testid="stTextInput"] > div > div {
+            background-color: #FFFFFF !important;
+        }
+
+        /* 2. Подписи (Email, Пароль): Делаем читаемыми */
+        [data-testid="stTextInput"] label p {
+            color: #FFFFFF !important; /* Белый текст */
+            font-weight: bold !important;
+            text-shadow: 0px 0px 5px rgba(0,0,0,1) !important; /* Черная тень */
+        }
+
+        /* 3. Кнопки внутри формы (Войти/Создать): Яркие и на всю ширину */
+        [data-testid="stForm"] [data-testid="stButton"] > button {
+            background-color: #00E5FF !important;
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            border: none !important;
+            font-weight: bold !important;
+            margin-top: 10px !important;
+            width: 100% !important; 
+        }
+
+        /* 4. Сама карточка входа: Всегда темная внутри */
+        div[data-testid="stForm"] {
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #111111 !important; 
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -959,6 +1002,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
