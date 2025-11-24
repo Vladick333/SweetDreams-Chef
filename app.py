@@ -525,34 +525,6 @@ def inject_css():
             margin-bottom: 15px;
         }
 
-    /* ========================================================================== */
-        /* === ФИНАЛЬНЫЙ ФИКС: ПАРОЛЬ И КНОПКА РЕГИСТРАЦИИ === */
-        /* ========================================================================== */
-
-        /* 1. ФИКС ГЛАЗИКА (ВИДИМОСТЬ И ВЫРАВНИВАНИЕ) */
-        /* Заставляем контейнер пароля быть гибким, чтобы кнопка "глазик" не выпадала */
-        div[data-baseweb="input"]:has(input[type="password"]) {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            padding-right: 0 !important; /* Убираем лишний отступ */
-        }
-        
-        /* Фикс самой кнопки глазика (делаем её белой и выравниваем) */
-        button[data-baseweb="button"] { 
-            color: #FFFFFF !important; 
-            margin-right: 0 !important;
-            min-width: 40px !important; /* Чтобы кнопка не была слишком узкой */
-            height: 45px !important; /* Уравниваем высоту с полем ввода */
-        }
-
-        /* 2. ФИКС КНОПКИ "ЗАРЕГИСТРИРОВАТЬСЯ" (Убираем перенос текста) */
-        /* Увеличиваем вертикальный отступ, чтобы вместить длинный текст */
-        [data-testid="stForm"] button[kind="primary"] {
-            padding: 10px 5px !important; /* Увеличиваем вертикальный отступ */
-            height: auto !important; /* Разрешаем кнопке быть выше */
-            line-height: 1.1 !important; /* Уплотняем текст */
-        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -987,6 +959,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
