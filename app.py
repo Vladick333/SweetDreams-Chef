@@ -524,44 +524,7 @@ def inject_css():
             padding: 20px;
             margin-bottom: 15px;
         }
-/* ========================================================================== */
-        /* === ФИНАЛЬНЫЙ ФИКС: КОНТРАСТ, ГЛАЗИК И ВЫРАВНИВАНИЕ ВНУТРИ ФОРМЫ === */
-        /* ========================================================================== */
-
-        /* 1. КАРТОЧКА ФОРМЫ: Принудительно темная, для контраста с общим фоном */
-        div[data-testid="stForm"] {
-            background-color: #1a1a1a !important; 
-            border: 1px solid #333;
-        }
-
-        /* 2. ПОЛЯ ВВОДА (Input fields): ЧЕРНЫЙ ТЕКСТ НА БЕЛОМ ФОНЕ (ГАРАНТИЯ ВИДИМОСТИ) */
-        [data-testid="stTextInput"] input {
-            background-color: #FFFFFF !important; /* Принудительно белый фон поля */
-            color: #000000 !important; /* Принудительно черный текст */
-            -webkit-text-fill-color: #000000 !important;
-            border: 1px solid #AAAAAA !important;
-            caret-color: #000000 !important;
-        }
-
-        /* 3. КНОПКИ ВНУТРИ ФОРМЫ (Войти/Зарегистрироваться) */
-        [data-testid="stForm"] [data-testid="stButton"] > button {
-            /* Возвращаем ваш основной стиль темной кнопки */
-            background-color: #1a1a1a !important; 
-            color: #FFFFFF !important;
-            /* Убираем лишние margin, чтобы текст не наезжал */
-            padding: 15px 5px !important;
-            line-height: 1.1 !important;
-            width: 100% !important;
-        }
-
-        /* 4. ФИКС ГЛАЗИКА ПАРОЛЯ: Делаем его темным и выравниваем */
-        button[title="Show password"], 
-        button[title="Hide password"] {
-            color: #333333 !important; /* Темный цвет иконки */
-            background-color: #FFFFFF !important; /* Фон кнопки (для фикса слияния) */
-            margin-right: 0px !important; /* Убираем сдвиг вправо */
-            height: 38px !important; /* Уравниваем высоту с полем ввода */
-        }
+    
     </style>
     """, unsafe_allow_html=True)
 
@@ -996,6 +959,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
