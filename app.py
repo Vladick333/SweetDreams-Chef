@@ -594,6 +594,17 @@ def inject_css():
             transform: scale(0.98) !important;
             box-shadow: 0 0 10px rgba(0, 229, 255, 0.4) !important;
         }
+        /* Поля ввода — чёрные на любой теме (на всякий случай усиливаем) */
+        div[data-testid="stTextInput"] input {
+            background-color: #111111 !important;
+            color: #ffffff !important;
+            border: 2px solid #333 !important;
+            caret-color: #00E5FF !important;
+        }
+        div[data-testid="stTextInput"] input:focus {
+            border-color: #00E5FF !important;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1028,6 +1039,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
