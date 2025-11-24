@@ -605,16 +605,7 @@ def inject_css():
             border-color: #00E5FF !important;
             box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
         }
-        /* ============================================================================== */
-        /* === ФИНАЛЬНЫЙ ТЮНИНГ: ЗАКРУГЛЕНИЯ И ФОН ПОД ГЛАЗИКОМ === */
-        /* ============================================================================== */
-
-        /* 1. КОНТЕЙНЕР (Коробка, где лежит и пароль, и глазик) */
-        div[data-baseweb="input"] {
-            background-color: #111111 !important; /* Темный фон для ВСЕГО поля */
-            border-radius: 12px !important;       /* Слегка закругляем края */
-            border: 1px solid #333 !important;    /* Тонкая темная рамка */
-        }
+        
         /* === СГЛАЖИВАНИЕ УГЛОВ НА ПОЛЯХ ВВОДА (ПОЧТА / ПАРОЛЬ) === */
         div[data-testid="stTextInput"] input,
         div[data-baseweb="input"] > div > div > input,
@@ -1067,6 +1058,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
