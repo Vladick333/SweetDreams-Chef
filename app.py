@@ -528,6 +528,22 @@ def inject_css():
                                    /* ============================================================================== */
         /* === ДИЗАЙН ФОРМЫ ВХОДА (СТИЛЬ "НЕОНОВЫЙ КИБЕРПАНК") === */
         /* ============================================================================== */
+        /* КНОПКА "Вход / Регистрация" — ВЕРНУЛ САМЫЙ КРАСИВЫЙ ВАРИАНТ (НЕ ТРОГАЙ ЕЁ БОЛЬШЕ!) */
+        [data-testid="stExpander"] details summary {
+            background-color: #1a1a1a !important;
+            color: #00E5FF !important;
+            border: 2px solid #00E5FF !important;
+            border-radius: 12px !important;
+            padding: 14px 18px !important;
+            font-weight: 800 !important;
+            font-size: 17px !important;
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2) !important;
+        }
+        [data-testid="stExpander"] details summary:hover {
+            background-color: #00E5FF !important;
+            color: #000 !important;
+            transform: translateY(-2px) !important;
+        }
 
         /* 1. ГЛАЗИК ПАРОЛЯ — ЯРКО-ГОЛУБОЙ ВСЕГДА */
         button[title="Show password"], 
@@ -1012,6 +1028,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
