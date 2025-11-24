@@ -524,38 +524,6 @@ def inject_css():
             padding: 20px;
             margin-bottom: 15px;
         }
-    /* === ВСТАВЛЯЕМ СЮДА (ФИКС ФОРМЫ ДЛЯ ТЕЛЕФОНА) === */
-        
-        /* 1. Принудительно красим текст внутри полей в ЧЕРНЫЙ, а фон в БЕЛЫЙ */
-        [data-testid="stTextInput"] input {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            caret-color: #000000 !important;
-            background-color: #FFFFFF !important;
-            border: 1px solid #ccc !important;
-        }
-
-        /* 2. Фикс для фона контейнера ввода */
-        div[data-testid="stTextInput"] > div > div {
-            background-color: #FFFFFF !important;
-            color: #000000 !important;
-        }
-
-        /* 3. Фикс для подписей (Label) над полями - делаем их видными */
-        div[data-testid="stTextInput"] label p {
-            color: #FFFFFF !important;
-            font-weight: bold !important;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-        }
-
-        /* 4. Фикс кнопки внутри формы (Вход/Создать) */
-        div[data-testid="stForm"] button {
-            background-color: #00E5FF !important;
-            color: #000000 !important;
-            border: none !important;
-            font-weight: bold !important;
-        }
-        /* ==================================================== */
 
     </style>
     """, unsafe_allow_html=True)
@@ -991,6 +959,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
