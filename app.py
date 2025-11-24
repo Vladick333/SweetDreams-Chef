@@ -629,6 +629,17 @@ def inject_css():
         div[data-testid="stTextInput"] input:focus {
             border-radius: 12px !important;
         }
+                /* === УБИРАЕМ НАВСЕГДА НАДПИСЬ "PRESS ENTER TO SEND" === */
+        [data-testid="stChatInput"] small,
+        [data-testid="stChatInput"] div + small,
+        [data-testid="stChatInput"] p:contains("Enter"),
+        .stChatInput small {
+            display: none !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1063,6 +1074,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
