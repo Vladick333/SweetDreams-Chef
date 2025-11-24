@@ -525,33 +525,58 @@ def inject_css():
             margin-bottom: 15px;
         }
 
-                                   /* === ФИНАЛЬНЫЙ ВАРИАНТ — ТОЧНО КАК ТЫ ХОТЕЛ === */
-        
-        /* Глазик пароля — ярко-голубой всегда */
-        div[data-testid="stTextInput"] button[title="View password"],
-        div[data-testid="stTextInput"] button svg {
+                                   /* ============================================================================== */
+        /* === ДИЗАЙН ФОРМЫ ВХОДА (СТИЛЬ "НЕОНОВЫЙ КИБЕРПАНК") === */
+        /* ============================================================================== */
+
+        /* 1. ГЛАЗИК ПАРОЛЯ — ЯРКО-ГОЛУБОЙ ВСЕГДА */
+        button[title="Show password"], 
+        button[title="Hide password"] {
             color: #00E5FF !important;
             fill: #00E5FF !important;
             opacity: 1 !important;
+            background: transparent !important;
+            border: none !important;
+        }
+        /* Если внутри svg - красим и его */
+        button[title="Show password"] svg, 
+        button[title="Hide password"] svg {
+            fill: #00E5FF !important;
+            stroke: #00E5FF !important;
         }
 
-        /* Кнопки "Войти" и "Зарегистрироваться" — ТОЧНО КАК КНОПКА "Вход / Регистрация" */
-        div[data-testid="stForm"] button[kind="primary"] {
-            background-color: #1a1a1a !important;
-            color: #00E5FF !important;
-            border: 2px solid #00E5FF !important;
+        /* 2. КНОПКИ "ВОЙТИ" И "ЗАРЕГИСТРИРОВАТЬСЯ" — КАК ГЛАВНАЯ КНОПКА */
+        div[data-testid="stForm"] button[kind="primary"],
+        div[data-testid="stFormSubmitButton"] button {
+            background-color: #1a1a1a !important; /* Темный фон */
+            color: #00E5FF !important; /* Неоновый текст */
+            border: 2px solid #00E5FF !important; /* Неоновая рамка */
             border-radius: 12px !important;
+            
             padding: 14px 18px !important;
             font-weight: 800 !important;
             font-size: 17px !important;
             text-transform: uppercase !important;
-            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2) !important;
-            min-height: 56px !important;
+            
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2) !important; /* Легкое свечение */
+            transition: all 0.2s ease-in-out !important;
+            width: 100% !important; /* На всю ширину формы */
         }
-        div[data-testid="stForm"] button[kind="primary"]:hover {
+
+        /* ЭФФЕКТ ПРИ НАВЕДЕНИИ (Заливка голубым) */
+        div[data-testid="stForm"] button[kind="primary"]:hover,
+        div[data-testid="stFormSubmitButton"] button:hover {
             background-color: #00E5FF !important;
-            color: #000 !important;
+            color: #000000 !important; /* Черный текст */
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.6) !important; /* Сильное свечение */
             transform: translateY(-2px) !important;
+        }
+
+        /* ЭФФЕКТ ПРИ НАЖАТИИ */
+        div[data-testid="stForm"] button[kind="primary"]:active,
+        div[data-testid="stFormSubmitButton"] button:active {
+            transform: scale(0.98) !important;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.4) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -987,6 +1012,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
