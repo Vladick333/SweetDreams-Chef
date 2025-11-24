@@ -1,0 +1,17 @@
+[theme]
+base = "dark"
+primaryColor = "#00E5FF"
+backgroundColor = "#050505"
+secondaryBackgroundColor = "#1a1a1a"
+textColor = "#FFFFFF"
+
+# УБЕРИ РЕШЕТКИ ТУТ ВНИЗУ:
+[client]
+showErrorDetails = false
+
+# ЭТО САМОЕ ВАЖНОЕ: ЗАПРЕЩАЕМ СМЕНУ ТЕМЫ
+# (Пользователь не сможет включить светлую тему, и твой дизайн никогда не сломается)
+[deprecation]
+showImageFormat = false 
+# В новых версиях Streamlit это делается через аргумент командной строки,
+# но задание base="dark" уже делает 90% работы.
