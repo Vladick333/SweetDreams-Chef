@@ -526,47 +526,68 @@ def inject_css():
         }
 
     /* ========================================================================== */
-        /* === ФИКС ДЛЯ ФОРМЫ ВХОДА (ЧТОБЫ БЫЛО ВИДНО НА ТЕЛЕФОНЕ) === */
+        /* === ИСПРАВЛЕННЫЙ ФИКС (ТЕМНЫЙ ДИЗАЙН + ВИДИМОСТЬ) === */
         /* ========================================================================== */
 
-        /* 1. Поля ввода: Белый фон, Черный текст */
+        /* 1. ПОЛЯ ВВОДА: ТЕМНЫЙ ФОН, БЕЛЫЙ ТЕКСТ (КАК БЫЛО РАНЬШЕ) */
         [data-testid="stTextInput"] input {
-            background-color: #FFFFFF !important; 
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important; /* Для iPhone */
-            caret-color: #000000 !important;
-            border: 1px solid #CCCCCC !important;
+            background-color: #1a1a1a !important; /* Темно-серый фон */
+            color: #FFFFFF !important; /* Белый текст */
+            caret-color: #00E5FF !important; /* Голубой курсор */
+            border: 1px solid #333 !important; /* Темная рамка */
+            -webkit-text-fill-color: #FFFFFF !important; /* Фикс для iPhone */
         }
         
-        /* Фон контейнера ввода */
+        /* Контейнер поля тоже темный */
         [data-testid="stTextInput"] > div > div {
-            background-color: #FFFFFF !important;
+            background-color: #1a1a1a !important;
+            color: #FFFFFF !important;
         }
 
-        /* 2. Подписи (Email, Пароль): Делаем читаемыми */
+        /* 2. ГЛАЗОК ПАРОЛЯ: БЕЛЫЙ */
+        button[title="Show password"], button[title="Hide password"] {
+            color: #FFFFFF !important;
+        }
+        /* При наведении на глазок - голубой */
+        button[title="Show password"]:hover, button[title="Hide password"]:hover {
+            color: #00E5FF !important;
+        }
+
+        /* 3. ПОДПИСИ (Почта, Пароль): БЕЛЫЕ */
         [data-testid="stTextInput"] label p {
-            color: #FFFFFF !important; /* Белый текст */
+            color: #FFFFFF !important;
             font-weight: bold !important;
-            text-shadow: 0px 0px 5px rgba(0,0,0,1) !important; /* Черная тень */
         }
 
-        /* 3. Кнопки внутри формы (Войти/Создать): Яркие и на всю ширину */
+        /* 4. КНОПКИ ВХОДА/РЕГИСТРАЦИИ (ВОЗВРАЩАЕМ ГОЛУБОЙ ЦВЕТ И АНИМАЦИЮ) */
         [data-testid="stForm"] [data-testid="stButton"] > button {
-            background-color: #00E5FF !important;
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            border: none !important;
-            font-weight: bold !important;
-            margin-top: 10px !important;
-            width: 100% !important; 
+            background-color: #1a1a1a !important; /* Темный фон в покое */
+            color: #FFFFFF !important;
+            border: 2px solid #333 !important;
+            transition: all 0.2s ease !important;
         }
 
-        /* 4. Сама карточка входа: Всегда темная внутри */
+        /* Анимация при наведении (Hover) - как у основных кнопок */
+        [data-testid="stForm"] [data-testid="stButton"] > button:hover {
+            background-color: #00E5FF !important; /* Ярко-голубой */
+            color: #000000 !important; /* Черный текст */
+            border-color: #00E5FF !important;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        /* Анимация при нажатии */
+        [data-testid="stForm"] [data-testid="stButton"] > button:active {
+            background-color: #0099CC !important;
+            transform: scale(0.98) !important;
+        }
+
+        /* 5. ФОН САМОЙ КАРТОЧКИ ВХОДА */
         div[data-testid="stForm"] {
+            background-color: #050505 !important; /* Почти черный */
             border: 1px solid #333;
             padding: 20px;
             border-radius: 15px;
-            background-color: #111111 !important; 
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1002,6 +1023,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
