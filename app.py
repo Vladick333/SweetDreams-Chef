@@ -524,7 +524,43 @@ def inject_css():
             padding: 20px;
             margin-bottom: 15px;
         }
-    
+
+    /* === ПОЛНЫЙ ФИКС НА СВЕТЛОЙ ТЕМЕ: ПОЛЯ И КНОПКИ ВХОДА/РЕГИСТРАЦИИ === */
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stTextInput"] textarea,
+        .stTextInput > div > div > input {
+            background-color: #111111 !important;
+            color: #ffffff !important;
+            caret-color: #00E5FF !important;
+            border: 2px solid #333333 !important;
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
+        }
+        div[data-testid="stTextInput"] input:focus,
+        div[data-testid="stTextInput"] textarea:focus {
+            border-color: #00E5FF !important;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.4) !important;
+            outline: none !important;
+        }
+
+        /* Кнопки Войти / Зарегистрироваться в формах — яркие неоновые */
+        div[data-testid="stForm"] button[kind="primary"],
+        button[kind="primary"]:not([data-testid="stButton"]) {
+            background: linear-gradient(135deg, #00E5FF, #2979FF) !important;
+            color: #000000 !important;
+            border: none !important;
+            border-radius: 12px !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+            padding: 14px 24px !important;
+            box-shadow: 0 8px 25px rgba(0, 229, 255, 0.3) !important;
+            transition: all 0.2s ease !important;
+        }
+        div[data-testid="stForm"] button[kind="primary"]:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 15px 35px rgba(0, 229, 255, 0.5) !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -959,6 +995,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
