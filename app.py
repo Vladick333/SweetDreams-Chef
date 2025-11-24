@@ -615,7 +615,17 @@ def inject_css():
             border-radius: 12px !important;       /* Слегка закругляем края */
             border: 1px solid #333 !important;    /* Тонкая темная рамка */
         }
-
+/* === УБИРАЕМ РАМКУ И ФОН С ГЛАЗИКА ПАРОЛЯ — ПОЛНАЯ ЧИСТОТА === */
+        div[data-testid="stTextInput"] button[title*="password"],
+        div[data-testid="stTextInput"] button[kind="secondary"],
+        div[data-testid="stTextInput"] button svg {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+            padding: 0 !important;
+            margin: 0 8px 0 0 !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1050,6 +1060,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
