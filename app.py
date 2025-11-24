@@ -525,69 +525,56 @@ def inject_css():
             margin-bottom: 15px;
         }
 
-                   /* === ФИНАЛЬНЫЙ УЛЬТРА-ФИКС СВЕТЛОЙ ТЕМЫ — ПОЛЯ, КНОПКИ, ГЛАЗОК, ПЛЕЙСХОЛДЕРЫ === */
-        /* ПОЛЯ ВВОДА (почта, пароль, имя) — ЧЁРНЫЕ НА ЛЮБОЙ ТЕМЕ */
-        div[data-testid="stTextInput"] input,
-        div[data-testid="stTextInput"] textarea,
-        .stTextInput > div > div > input,
-        input[data-baseweb="input"],
-        div[data-baseweb="input"] input {
-            background-color: #111111 !important;
-            color: #ffffff !important;
-            caret-color: #00E5FF !important;
-            border: 2px solid #333333 !important;
-            border-radius: 12px !important;
-            padding: 14px 16px !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8) !important;
-            -webkit-text-fill-color: #ffffff !important;
-        }
-        div[data-testid="stTextInput"] input:focus,
-        div[data-testid="stTextInput"] input:hover {
-            border-color: #00E5FF !important;
-            box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
-        }
-
-        /* Плейсхолдеры в полях — серо-белые, чтобы было видно */
-        div[data-testid="stTextInput"] input::placeholder {
-            color: rgba(255, 255, 255, 0.6) !important;
-            opacity: 1 !important;
-        }
-
-        /* Лейблы над полями (Почта, Пароль и т.д.) */
-        div[data-testid="stTextInput"] label,
-        div[data-testid="stForm"] label {
+                           /* === ФИНАЛЬНЫЙ ФИКС — КНОПКА EXPANDER КАК ТЕБЕ НРАВИТСЯ + КНОПКИ ВОЙТИ/РЕГИСТРАЦИЯ ЯРКО-ГОЛУБЫЕ === */
+        
+        /* КНОПКА "Вход / Регистрация" — ВЕРНУЛ САМЫЙ КРАСИВЫЙ ВАРИАНТ (НЕ ТРОГАЙ ЕЁ БОЛЬШЕ!) */
+        [data-testid="stExpander"] details summary {
+            background-color: #1a1a1a !important;
             color: #00E5FF !important;
+            border: 2px solid #00E5FF !important;
+            border-radius: 12px !important;
+            padding: 14px 18px !important;
             font-weight: 800 !important;
-            font-size: 16px !important;
+            font-size: 17px !important;
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.2) !important;
+        }
+        [data-testid="stExpander"] details summary:hover {
+            background-color: #00E5FF !important;
+            color: #000 !important;
+            transform: translateY(-2px) !important;
         }
 
-        /* КНОПКИ В ФОРМАХ ВХОДА/РЕГИСТРАЦИИ — ЯРКИЙ НЕОН */
+        /* КНОПКИ "Войти" и "Зарегистрироваться" — ЯРКИЙ НЕОНОВЫЙ ГРАДИЕНТ */
         div[data-testid="stForm"] button[kind="primary"],
-        form button[kind="primary"] {
+        form button[kind="primary"],
+        button[kind="primary"] {
             background: linear-gradient(135deg, #00E5FF, #2979FF) !important;
             color: #000000 !important;
             border: none !important;
             border-radius: 12px !important;
             font-weight: 900 !important;
             text-transform: uppercase !important;
-            padding: 14px 30px !important;
-            min-height: 52px !important;
-            box-shadow: 0 8px 30px rgba(0, 229, 255, 0.5) !important;
+            padding: 16px 32px !important;
+            min-height: 56px !important;
+            box-shadow: 0 8px 30px rgba(0, 229, 255, 0.6) !important;
+            transition: all 0.2s ease !important;
         }
-        div[data-testid="stForm"] button[kind="primary"]:hover {
+        div[data-testid="stForm"] button[kind="primary"]:hover,
+        button[kind="primary"]:hover {
             transform: translateY(-4px) !important;
-            box-shadow: 0 15px 40px rgba(0, 229, 255, 0.7) !important;
+            box-shadow: 0 15px 40px rgba(0, 229, 255, 0.8) !important;
         }
 
-        /* Глазок пароля — ярко-голубой всегда */
-        div[data-testid="stTextInput"] button[title="View password"],
-        div[data-testid="stTextInput"] button svg {
-            color: #00E5FF !important;
-            fill: #00E5FF !important;
-        }
-        div[data-testid="stTextInput"] button[title="View password"]:hover {
+        /* Поля ввода — чёрные на любой теме (на всякий случай усиливаем) */
+        div[data-testid="stTextInput"] input {
+            background-color: #111111 !important;
             color: #ffffff !important;
-            fill: #ffffff !important;
+            border: 2px solid #333 !important;
+            caret-color: #00E5FF !important;
+        }
+        div[data-testid="stTextInput"] input:focus {
+            border-color: #00E5FF !important;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -1023,6 +1010,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
