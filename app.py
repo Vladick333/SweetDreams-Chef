@@ -525,28 +525,9 @@ def inject_css():
             margin-bottom: 15px;
         }
 
-    /* === ПОЛНЫЙ ФИКС НА СВЕТЛОЙ ТЕМЕ: ПОЛЯ И КНОПКИ ВХОДА/РЕГИСТРАЦИИ === */
-        div[data-testid="stTextInput"] input,
-        div[data-testid="stTextInput"] textarea,
-        .stTextInput > div > div > input {
-            background-color: #111111 !important;
-            color: #ffffff !important;
-            caret-color: #00E5FF !important;
-            border: 2px solid #333333 !important;
-            border-radius: 12px !important;
-            padding: 14px 16px !important;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.7) !important;
-        }
-        div[data-testid="stTextInput"] input:focus,
-        div[data-testid="stTextInput"] textarea:focus {
-            border-color: #00E5FF !important;
-            box-shadow: 0 0 25px rgba(0, 229, 255, 0.4) !important;
-            outline: none !important;
-        }
-
-        /* Кнопки Войти / Зарегистрироваться в формах — яркие неоновые */
-        div[data-testid="stForm"] button[kind="primary"],
-        button[kind="primary"]:not([data-testid="stButton"]) {
+            /* === АБСОЛЮТНЫЙ ФИКС СВЕТЛОЙ ТЕМЫ: КНОПКИ, EXPANDER, ГЛАЗОК ПАРОЛЯ === */
+        /* Все primary-кнопки (Войти, Зарегистрироваться, кнопки в сайдбаре) */
+        button[kind="primary"] {
             background: linear-gradient(135deg, #00E5FF, #2979FF) !important;
             color: #000000 !important;
             border: none !important;
@@ -554,12 +535,45 @@ def inject_css():
             font-weight: 900 !important;
             text-transform: uppercase !important;
             padding: 14px 24px !important;
-            box-shadow: 0 8px 25px rgba(0, 229, 255, 0.3) !important;
-            transition: all 0.2s ease !important;
+            box-shadow: 0 8px 25px rgba(0, 229, 255, 0.4) !important;
+            min-height: 48px !important;
         }
-        div[data-testid="stForm"] button[kind="primary"]:hover {
+        button[kind="primary"]:hover {
             transform: translateY(-3px) !important;
-            box-shadow: 0 15px 35px rgba(0, 229, 255, 0.5) !important;
+            box-shadow: 0 15px 35px rgba(0, 229, 255, 0.6) !important;
+        }
+
+        /* Кнопка-стрелка Expander "Вход / Регистрация" */
+        [data-testid="stExpander"] details summary {
+            background-color: #1a1a1a !important;
+            color: #00E5FF !important;
+            border: 2px solid #00E5FF !important;
+            border-radius: 12px !important;
+            padding: 12px 16px !important;
+            font-weight: 800 !important;
+            font-size: 16px !important;
+        }
+        [data-testid="stExpander"] details summary:hover {
+            background-color: #00E5FF !important;
+            color: #000 !important;
+        }
+
+        /* Глазок пароля (иконка видимости) — теперь всегда ярко-неоновый */
+        div[data-testid="stTextInput"] button,
+        div[data-testid="stTextInput"] svg {
+            color: #00E5FF !important;
+            fill: #00E5FF !important;
+            background: transparent !important;
+            opacity: 1 !important;
+        }
+        div[data-testid="stTextInput"] button:hover {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+        }
+
+        /* Надпись "Вход / Регистрация" в expander — всегда яркая */
+        [data-testid="stExpander"] details summary div {
+            color: #00E5FF !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -995,6 +1009,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
