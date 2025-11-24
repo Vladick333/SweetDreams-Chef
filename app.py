@@ -524,7 +524,51 @@ def inject_css():
             padding: 20px;
             margin-bottom: 15px;
         }
-    
+
+    /* ========================================================================== */
+        /* === ФИНАЛЬНЫЙ ФИКС ВХОДА (КОНТРАСТ + ГЛАЗОК) === */
+        /* ========================================================================== */
+        
+        /* 1. КАРТОЧКА ФОРМЫ: ВСЕГДА ТЕМНАЯ (ЗАЩИТА ФОРМЫ ОТ СВЕТЛОГО ФОНА) */
+        div[data-testid="stForm"] {
+            background-color: #161616 !important; /* Темный фон самой карточки */
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        /* 2. ПОЛЯ ВВОДА (Input fields): ВСЕГДА ЧИТАБЕЛЬНЫЕ */
+        [data-testid="stTextInput"] input, 
+        [data-testid="stTextInput"] textarea {
+            color: #000000 !important; /* Текст внутри: ЧЕРНЫЙ */
+            -webkit-text-fill-color: #000000 !important; /* Fix Safari/iPhone */
+            background-color: #FFFFFF !important; /* Фон поля: БЕЛЫЙ */
+            border: 1px solid #CCCCCC !important;
+            caret-color: #000000 !important; /* Курсор черный */
+        }
+
+        /* 3. ПОДПИСИ (Labels): ОСТАЮТСЯ БЕЛЫМИ НА ТЕМНОМ ФОНЕ ФОРМЫ */
+        [data-testid="stTextInput"] label p {
+            color: #FFFFFF !important;
+            font-weight: bold !important;
+        }
+
+        /* 4. КНОПКИ ВНУТРИ ФОРМЫ (Войти/Зарегистрироваться) */
+        [data-testid="stForm"] [data-testid="stButton"] > button {
+            /* Возвращаем стиль темной кнопки, но с принудительными цветами */
+            background-color: #1a1a1a !important; 
+            color: #FFFFFF !important;
+            border: 2px solid #333 !important;
+            margin-top: 10px !important;
+            width: 100% !important; /* Фикс съехавшей ширины */
+        }
+
+        /* 5. ФИКС ГЛАЗКА ПАРОЛЯ */
+        /* Глазок должен быть темным, чтобы его было видно на белом фоне поля ввода */
+        button[title="Show password"], button[title="Hide password"] {
+            color: #333333 !important; 
+            background: transparent !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -959,6 +1003,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
