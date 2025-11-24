@@ -616,20 +616,6 @@ def inject_css():
             border: 1px solid #333 !important;    /* Тонкая темная рамка */
         }
 
-        /* 2. САМО ПОЛЕ ВВОДА (Текст внутри) */
-        div[data-testid="stTextInput"] input {
-            background-color: transparent !important; /* Делаем прозрачным, чтобы виден был фон контейнера */
-            color: #FFFFFF !important;                /* Текст всегда белый */
-            border: none !important;                  /* Убираем лишнюю рамку внутри */
-            caret-color: #00E5FF !important;          /* Голубой курсор */
-        }
-
-        /* 3. ГЛАЗИК (Делаем его прозрачным, чтобы под ним был темный фон контейнера) */
-        button[title="Show password"], 
-        button[title="Hide password"] {
-            background-color: transparent !important;
-            border: none !important;
-        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1064,6 +1050,7 @@ with t3:
     df = pd.DataFrame(DB)
     sc = pd.DataFrame(df['scores'].tolist(), columns=FEATURES)
     st.dataframe(pd.concat([df[['name', 'desc']], sc], axis=1), use_container_width=True)
+
 
 
 
